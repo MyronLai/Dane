@@ -25,12 +25,12 @@ async def on_message(message):
         return
     if isValidCommand(message.content, "help"): # True if command is '?help'
         await displayHelpDirectory(client, message.channel)
+
     elif isValidCommand(message.content, "bot"): # True if command is '?bot'
         print("Bot")
 
     elif isValidCommand(message.content, "assign"):
-        await assignRole(client, message)
-
+        await assignRole(client, message) # Adds a user to a role
 
     elif isValidCommand(message.content, "remove"):
         print("Remove a role")
