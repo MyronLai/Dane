@@ -8,3 +8,4 @@ To-Do:
 - Remove roles
 - Display Help Directory
 - Provide other functionality such as course searching, using HTTP Requests.
+- Set up a web server to display some cool stats for each user.
