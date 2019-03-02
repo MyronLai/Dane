@@ -1,6 +1,6 @@
 import asyncio
 import discord
-
+import courses
 def hasRole(member, role):
     memberRoles = member.roles
     currentRole = discord.utils.find(lambda r : r.name.lower() == role.lower(), memberRoles)
@@ -71,3 +71,16 @@ async def removeRole(client, message):
             print("Removed.")
 
         counter += 1
+
+async def queryCourse(client, message):
+
+    args = message.content.split(" ")
+    print(args)
+    course_results = await courses.getCourses(args[1], args[2])
+    for currentCourse in course_results['courses']:
+        embed = discord.Embed()
+        embed.color = 4382708
+        embed.add_field(name="Class Number", value=currentCourse['class'])
+        embed.add_field(name="Class Info", value=currentCourse['courseInfo'])
+        embed.add_field(name="Meeting", value=currentCourse['meeting'])
+        await client.send_message(message.channel, embed=embed)

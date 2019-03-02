@@ -39,6 +39,9 @@ async def on_message(message):
     elif isValidCommand(message.content, "remove"):
         await removeRole(client, message)
 
+    elif isValidCommand(message.content, "course"):
+        await queryCourse(client, message)
+
 @client.event
 async def on_message_delete(message): # Print out a summary of the message deleted
 
