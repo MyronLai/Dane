@@ -2,7 +2,7 @@ import json
 import discord
 import asyncio
 
-from commands import displayHelpDirectory, assignRole
+from commands import *
 
 client = discord.Client()
 
@@ -33,6 +33,6 @@ async def on_message(message):
         await assignRole(client, message) # Adds a user to a role
 
     elif isValidCommand(message.content, "remove"):
-        print("Remove a role")
+        await removeRole(client, message)
 
 client.run(CLIENT_TOKEN) # Run the bot
