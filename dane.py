@@ -3,14 +3,14 @@ import discord
 import asyncio
 
 from commands import *
+import courses
 
 client = discord.Client()
 
-with open('config.json') as f: # LOAD JSON FILE
+with open('config/config.json') as f: # LOAD JSON FILE
     data = json.load(f) # LOAD JSON INTO data
 
 CLIENT_TOKEN = data['token'] # STORE CLIENT TOKEN from JSON.
-
 
 # -----------------
 
@@ -20,6 +20,7 @@ def isValidCommand(msg, command):
 @client.event
 async def on_ready():
     print('Logged in as ' + client.user.name)
+    await courses.getCourses()
 
 @client.event
 async def on_message(message):
@@ -55,7 +56,7 @@ async def on_message_delete(message): # Print out a summary of the message delet
     embed.add_field(name="Message ID", value=id, inline=False)
     embed.add_field(name="Message", value=msgString)
     embed.set_author(name=msgAuthor, icon_url=msgAuthor.avatar_url)
-    
+
     embed.color = 16007746
 
     channels = message.server.channels
