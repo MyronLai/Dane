@@ -67,12 +67,22 @@ async def on_message_delete(message): # Print out a summary of the message delet
 
 @client.event
 async def on_member_join(member):
-    welcome_channel = discord.utils.get(member.server.channels, name='member-log')
+    member_log_channel = discord.utils.get(member.server.channels, name='member-log')
     authorName = member.name + "#" + member.discriminator + " <" + member.id + ">"
     embed = discord.Embed()
     embed.color = 4303348
     embed.set_author(name=authorName, icon_url=member.avatar_url)
     embed.set_footer(text="User joined")
-    await client.send_message(welcome_channel, embed=embed)
+    await client.send_message(member_log_channel, embed=embed)
+
+@client.event
+async def on_member_remove(member):
+    member_log_channel = discord.utils.get(member.server.channels, name='member-log')
+    authorName = member.name + "#" + member.discriminator + " <" + member.id + ">"
+    embed = discord.Embed()
+    embed.color = 16007489
+    embed.set_author(name=authorName, icon_url=member.avatar_url)
+    embed.set_footer(text="User left")
+    await client.send_message(member_log_channel, embed=embed)
 
 client.run(CLIENT_TOKEN) # Run the bot
