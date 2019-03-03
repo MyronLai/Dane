@@ -25,25 +25,22 @@ async def on_ready():
 async def on_message(message):
     if message.author.bot:
         return
-
     if isValidCommand(message.content, "help"): # True if command is '?help'
         await displayHelpDirectory(client, message.channel)
-
     elif isValidCommand(message.content, "bot"): # True if command is '?bot'
         print("Bot")
-
     elif isValidCommand(message.content, "assign"):
         await assignRole(client, message) # Adds a user to a role
-
     elif isValidCommand(message.content, "remove"):
         await removeRole(client, message)
-
     elif isValidCommand(message.content, "course"):
         await queryCourse(client, message)
 
 @client.event
 async def on_message_delete(message): # Print out a summary of the message deleted
 
+    if message.author.bot:
+        return
     msgString = message.content
     msgAuthor = message.author
     time = message.timestamp
@@ -83,6 +80,26 @@ async def on_member_remove(member):
     embed.color = 16007489
     embed.set_author(name=authorName, icon_url=member.avatar_url)
     embed.set_footer(text="User left")
+    await client.send_message(member_log_channel, embed=embed)
+
+@client.event
+async def on_member_ban(member):
+    member_log_channel = discord.utils.get(member.server.channels, name='mod-logs')
+    authorName = member.name + "#" + member.discriminator + " <" + member.id + ">"
+    embed = discord.Embed()
+    embed.color = 16029762
+    embed.set_author(name=authorName, icon_url=member.avatar_url)
+    embed.set_footer(text="User Banned")
+    await client.send_message(member_log_channel, embed=embed)
+
+@client.event
+async def on_member_unban(server, user):
+    member_log_channel = discord.utils.get(server.channels, name='mod-logs')
+    authorName = user.name + "#" + user.discriminator + " <" + user.id + ">"
+    embed = discord.Embed()
+    embed.color = 8314597
+    embed.set_author(name=authorName, icon_url=user.avatar_url)
+    embed.set_footer(text="User Unbanned")
     await client.send_message(member_log_channel, embed=embed)
 
 client.run(CLIENT_TOKEN) # Run the bot
