@@ -20,7 +20,6 @@ def isValidCommand(msg, command):
 @client.event
 async def on_ready():
     print('Logged in as ' + client.user.name)
-    await courses.getCourses()
 
 @client.event
 async def on_message(message):
@@ -65,5 +64,15 @@ async def on_message_delete(message): # Print out a summary of the message delet
     channels = message.server.channels
     mod_channel = discord.utils.get(channels, name='mod-logs')
     await client.send_message(mod_channel, embed=embed)
+
+@client.event
+async def on_member_join(member):
+    welcome_channel = discord.utils.get(member.server.channels, name='member-log')
+    authorName = member.name + "#" + member.discriminator + " <" + member.id + ">"
+    embed = discord.Embed()
+    embed.color = 4303348
+    embed.set_author(name=authorName, icon_url=member.avatar_url)
+    embed.set_footer(text="User joined")
+    await client.send_message(welcome_channel, embed=embed)
 
 client.run(CLIENT_TOKEN) # Run the bot
