@@ -67,7 +67,6 @@ async def assignRole(client, message):
     # End of For Loop.
 
 async def removeRole(client, message):
-    print("Removing a role")
     roles = message.server.roles
     args = message.content.split()
     args.pop(0)
