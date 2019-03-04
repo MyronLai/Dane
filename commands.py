@@ -1,6 +1,8 @@
 import asyncio
 import discord
 import courses
+import re
+
 def hasRole(member, role):
     memberRoles = member.roles
     currentRole = discord.utils.find(lambda r : r.name.lower() == role.lower(), memberRoles)
@@ -13,11 +15,19 @@ async def displayHelpDirectory(client, channel):
 async def assignRole(client, message):
     # Needs to add a role to the user.
     roles = message.server.roles
-    args = message.content.split()
-
+    args = re.sub("^(\?assign( )*)", "", message.content)
+    args = re.split(" *, *", args)
+    print(args)
+    if len(args) == 1 and len(args[0]) == 0:
+        embed = discord.Embed()
+        embed.title = 'Too few arguments'
+        embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
+        embed.description = "?assign <role1, role2, ...>"
+        embed.color = 4366836
+        await client.send_message(message.channel, embed=embed)
+        return
     # Need to check array length, for each role in the array, we will loop and check if the role exists.
 
-    args.pop(0)
     counter = 0 # Counter to start at zero.
 
     rolesSuccess = []
@@ -83,4 +93,6 @@ async def queryCourse(client, message):
         embed.add_field(name="Class Number", value=currentCourse['class'])
         embed.add_field(name="Class Info", value=currentCourse['courseInfo'])
         embed.add_field(name="Meeting", value=currentCourse['meeting'])
+        embed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
+        embed.set_footer(text="Fall 2019 Semester")
         await client.send_message(message.channel, embed=embed)

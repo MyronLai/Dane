@@ -1,6 +1,8 @@
 import json
 import discord
 import asyncio
+import datetime
+import time
 
 from commands import *
 import courses
@@ -27,8 +29,6 @@ async def on_message(message):
         return
     if isValidCommand(message.content, "help"): # True if command is '?help'
         await displayHelpDirectory(client, message.channel)
-    elif isValidCommand(message.content, "bot"): # True if command is '?bot'
-        print("Bot")
     elif isValidCommand(message.content, "assign"):
         await assignRole(client, message) # Adds a user to a role
     elif isValidCommand(message.content, "remove"):
@@ -43,7 +43,7 @@ async def on_message_delete(message): # Print out a summary of the message delet
         return
     msgString = message.content
     msgAuthor = message.author
-    time = message.timestamp
+    time = utc_to_local(message.timestamp)
     id = message.id
 
     embed = discord.Embed()
@@ -101,5 +101,11 @@ async def on_member_unban(server, user):
     embed.set_author(name=authorName, icon_url=user.avatar_url)
     embed.set_footer(text="User Unbanned")
     await client.send_message(member_log_channel, embed=embed)
+
+def utc_to_local(dt):
+    if time.localtime().tm_isdst:
+        return dt - datetime.timedelta(seconds = time.altzone)
+    else:
+        return dt - datetime.timedelta(seconds = time.timezone)
 
 client.run(CLIENT_TOKEN) # Run the bot
