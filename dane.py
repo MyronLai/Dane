@@ -35,6 +35,8 @@ async def on_message(message):
         await removeRole(client, message)
     elif isValidCommand(message.content, "course"):
         await queryCourse(client, message)
+    elif isValidCommand(message.content, "prune"):
+        await pruneMessages(message) # Need the text channel.
 
 @client.event
 async def on_message_delete(message): # Print out a summary of the message deleted
@@ -43,12 +45,12 @@ async def on_message_delete(message): # Print out a summary of the message delet
         return
     msgString = message.content
     msgAuthor = message.author
-    time = utc_to_local(message.timestamp)
+    time = utc_to_local(message.created_at)
     id = message.id
 
     embed = discord.Embed(color=16007746)
 
-    embed.title = "Message Deleted <" + id +">"
+    embed.title = "Message Deleted <" + str(id) +">"
 
     embed.add_field(name="Author", value=msgAuthor, inline=False)
     embed.add_field(name="Time", value=time, inline=False)
@@ -56,7 +58,7 @@ async def on_message_delete(message): # Print out a summary of the message delet
     embed.add_field(name="Message", value=msgString)
     embed.set_author(name=msgAuthor, icon_url=msgAuthor.avatar_url)
 
-    channels = message.server.channels
+    channels = message.guild.channels
     mod_channel = discord.utils.get(channels, name='mod-logs')
     await mod_channel.send(embed=embed)
 

@@ -95,3 +95,12 @@ async def queryCourse(client, message):
         embed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
         embed.set_footer(text="Fall 2019 Semester")
         await client.send_message(message.channel, embed=embed)
+
+# THIS IS AN ADMIN FUNCTION 
+async def pruneMessages(message):
+    # Check if the user who issued the command has permission.
+    isAdmin = message.author.permissions_in(message.channel).administrator
+    channel = message.channel
+    # If the user is an Admin, then we can proceed to prune the messages.
+    if isAdmin:
+        await channel.purge(limit=50, check=(lambda m : m.author.id == 187090775819943936))
