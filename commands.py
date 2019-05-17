@@ -97,12 +97,33 @@ async def queryCourse(client, message):
         await message.channel.send(embed=embed)
 
 # THIS IS AN ADMIN FUNCTION 
-async def pruneMessages(message, user_id, count):
+async def pruneMessages(message, user_id):
     # Check if the user who issued the command has permission.
-    print(user_id)
     isAdmin = message.author.permissions_in(message.channel).administrator
+    owner = message.guild.owner
     channel = message.channel
     # If the user is an Admin, then we can proceed to prune the messages.
     if isAdmin:
-        print('yea?')
-        await channel.purge(limit=count, check=(lambda m : str(m.author.id) == user_id))
+        print('User is an admin. Deleting...')
+        # Check if the messages to be deleted were sent by an Admin.
+        user = discord.utils.find(lambda u : u.id == user_id, message.guild.members) # Get the author of the messages to purge
+        if user is not None: 
+            guild_perms = message.channel.permissions_for(user).administrator
+
+            if owner.id == user_id or user_id == message.author.id:
+                print("Owner is deleting another admin's messages.")
+                await channel.purge(limit=50, check=(lambda m : int(m.author.id) == user_id))
+            
+            elif guild_perms: # If messages were by another Admin. Don't delete. We will make it so the owner can delete any Admin's messages.
+                print('You cannot delete messages of another Admin')
+            else:
+                print("Deleting..")
+                await channel.purge(limit=50, check=(lambda m : int(m.author.id) == user_id))
+
+            
+
+    else:
+        print('User is not an admin, not deleting.')
+        
+
+    

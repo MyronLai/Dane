@@ -31,12 +31,12 @@ async def remove(ctx):
 async def course(ctx):
     await queryCourse(ctx, ctx.message)
 
+'''
+mass delete messages using TextChannel.purge() function, must ensure that the command is issued by an Administrator, and that the user id provided is not of an Admin on the server.
+'''
 @client.command()
-async def prune(ctx, userid, count):
-    if int(count) > 50:
-         print('Max is 50.')
-    else:
-        await pruneMessages(ctx.message, userid, int(count))
+async def prune(ctx, user_id):
+    await pruneMessages(ctx.message, int(user_id))
 
 @client.event
 async def on_command_error(ctx, error):
