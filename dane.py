@@ -30,7 +30,23 @@ async def remove(ctx):
 @client.command()
 async def course(ctx):
     await queryCourse(ctx, ctx.message)
-    
+
+@client.command()
+async def prune(ctx, args):
+    await pruneMessages(ctx.message)
+
+@client.event
+async def on_command_error(ctx, error):
+    if ctx.command.name == 'prune':
+        # Send an embed
+        embed = discord.Embed()
+        embed.title = 'Missing user id.'
+        embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
+        embed.description = '?prune <user_id>'
+        embed.color = 16042050
+
+        await ctx.channel.send(embed=embed)
+
 @client.event
 async def on_ready():
     print('Logged in as ' + client.user.name)

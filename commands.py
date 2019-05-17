@@ -24,7 +24,7 @@ async def assignRole(client, message):
         embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
         embed.description = "?assign <role1, role2, ...>"
         embed.color = 4366836
-        await client.send_message(message.channel, embed=embed)
+        await message.channel.send(embed=embed)
         return
     # Need to check array length, for each role in the array, we will loop and check if the role exists.
 
@@ -43,7 +43,7 @@ async def assignRole(client, message):
             embed.description = 'Role not found.'
             embed.color = 16711680
             rolesFailure.append(args[counter])
-            await client.send_message(message.channel, embed = embed)
+            await message.channel.send(embed = embed)
 
         if hasRole(message.author, args[counter]):
             embed = discord.Embed()
@@ -51,7 +51,7 @@ async def assignRole(client, message):
             embed.description = 'User already assigned to role.'
             embed.color = 16711680
             rolesFailure.append(args[counter])
-            await client.send_message(message.channel, embed = embed)
+            await message.channel.send(embed = embed)
 
         else:
             await message.author.add_roles(ROLE_TO_ASSIGN)
@@ -67,7 +67,7 @@ async def assignRole(client, message):
     # End of For Loop.
 
 async def removeRole(client, message):
-    roles = message.server.roles
+    roles = message.guild.roles
     args = message.content.split()
     args.pop(0)
     counter = 0
@@ -76,7 +76,7 @@ async def removeRole(client, message):
         ROLE_TO_REMOVE = discord.utils.find(lambda r : r.name.lower() == args[counter].lower(), roles)
 
         if hasRole(message.author, args[counter]):
-            await client.remove_roles(message.author, ROLE_TO_REMOVE)
+            await message.author.remove_roles(ROLE_TO_REMOVE)
             print("Removed.")
 
         counter += 1
@@ -94,7 +94,7 @@ async def queryCourse(client, message):
         embed.add_field(name="Meeting", value=currentCourse['meeting'])
         embed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
         embed.set_footer(text="Fall 2019 Semester")
-        await client.send_message(message.channel, embed=embed)
+        await message.channel.send(embed=embed)
 
 # THIS IS AN ADMIN FUNCTION 
 async def pruneMessages(message):
@@ -103,4 +103,5 @@ async def pruneMessages(message):
     channel = message.channel
     # If the user is an Admin, then we can proceed to prune the messages.
     if isAdmin:
-        await channel.purge(limit=50, check=(lambda m : m.author.id == 187090775819943936))
+        print('yea?')
+        await channel.purge(limit=50, bulk=False, check=(lambda m : m.author.id == 187090775819943936))
