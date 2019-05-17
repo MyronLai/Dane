@@ -22,29 +22,19 @@ async def help(ctx):
 @client.command()
 async def assign(ctx):
     await assignRole(client, ctx.message)
+
+@client.command()
+async def remove(ctx):
+    await removeRole(client, ctx.message)
+
+@client.command()
+async def course(ctx):
+    await queryCourse(ctx, ctx.message)
     
 @client.event
 async def on_ready():
     print('Logged in as ' + client.user.name)
-'''
-def isValidCommand(msg, command):
-    return msg.startswith("?" + command)
 
-@client.event
-async def on_message(message):
-    if message.author.bot:
-        return
-    if isValidCommand(message.content, "help"): # True if command is '?help'
-        await displayHelpDirectory(client, message.channel)
-    elif isValidCommand(message.content, "assign"):
-        await assignRole(client, message) # Adds a user to a role
-    elif isValidCommand(message.content, "remove"):
-        await removeRole(client, message)
-    elif isValidCommand(message.content, "course"):
-        await queryCourse(client, message)
-    elif isValidCommand(message.content, "prune"):
-        await pruneMessages(message) # Need the text channel.
-'''
 @client.event
 async def on_message_delete(message): # Print out a summary of the message deleted
 
