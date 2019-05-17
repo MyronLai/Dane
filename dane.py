@@ -1,13 +1,12 @@
 import json
 import discord
-import asyncio
 import datetime
 import time
-
+from discord.ext import commands 
 from commands import *
 import courses
 
-client = discord.Client()
+client = commands.Bot(command_prefix='?', help_command=None)
 
 with open('config/config.json') as f: # LOAD JSON FILE
     data = json.load(f) # LOAD JSON INTO data
@@ -16,12 +15,20 @@ CLIENT_TOKEN = data['token'] # STORE CLIENT TOKEN from JSON.
 
 # -----------------
 
-def isValidCommand(msg, command):
-    return msg.startswith("?" + command)
+@client.command()
+async def help(ctx):
+    await displayHelpDirectory(ctx.channel)
 
+@client.command()
+async def assign(ctx):
+    await assignRole(client, ctx.message)
+    
 @client.event
 async def on_ready():
     print('Logged in as ' + client.user.name)
+'''
+def isValidCommand(msg, command):
+    return msg.startswith("?" + command)
 
 @client.event
 async def on_message(message):
@@ -37,7 +44,7 @@ async def on_message(message):
         await queryCourse(client, message)
     elif isValidCommand(message.content, "prune"):
         await pruneMessages(message) # Need the text channel.
-
+'''
 @client.event
 async def on_message_delete(message): # Print out a summary of the message deleted
 

@@ -9,12 +9,12 @@ def hasRole(member, role):
     print(currentRole)
     return currentRole != None
 
-async def displayHelpDirectory(client, channel):
-    await client.send_message(channel, "You triggered the help command.")
+async def displayHelpDirectory(channel):
+    await channel.send("You triggered the help command.")
 
 async def assignRole(client, message):
     # Needs to add a role to the user.
-    roles = message.server.roles
+    roles = message.guild.roles
     args = re.sub("^(\?assign( )*)", "", message.content)
     args = re.split(" *, *", args)
     print(args)
@@ -54,13 +54,13 @@ async def assignRole(client, message):
             await client.send_message(message.channel, embed = embed)
 
         else:
-            await client.add_roles(message.author, ROLE_TO_ASSIGN)
+            await message.author.add_roles(ROLE_TO_ASSIGN)
             embed = discord.Embed()
             embed.title = 'Success'
             embed.description = 'Added to role'
             embed.color = 65280
             rolesSuccess.append(args[counter])
-            await client.send_message(message.channel, embed = embed)
+            await message.channel.send(embed = embed)
 
         counter += 1
 
