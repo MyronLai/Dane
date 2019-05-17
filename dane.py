@@ -32,17 +32,20 @@ async def course(ctx):
     await queryCourse(ctx, ctx.message)
 
 @client.command()
-async def prune(ctx, args):
-    await pruneMessages(ctx.message)
+async def prune(ctx, userid, count):
+    if int(count) > 50:
+         print('Max is 50.')
+    else:
+        await pruneMessages(ctx.message, userid, int(count))
 
 @client.event
 async def on_command_error(ctx, error):
+    print(error)
     if ctx.command.name == 'prune':
         # Send an embed
         embed = discord.Embed()
-        embed.title = 'Missing user id.'
         embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
-        embed.description = '?prune <user_id>'
+        embed.description = 'Error: ' + str(error)
         embed.color = 16042050
 
         await ctx.channel.send(embed=embed)

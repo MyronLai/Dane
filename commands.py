@@ -97,11 +97,12 @@ async def queryCourse(client, message):
         await message.channel.send(embed=embed)
 
 # THIS IS AN ADMIN FUNCTION 
-async def pruneMessages(message):
+async def pruneMessages(message, user_id, count):
     # Check if the user who issued the command has permission.
+    print(user_id)
     isAdmin = message.author.permissions_in(message.channel).administrator
     channel = message.channel
     # If the user is an Admin, then we can proceed to prune the messages.
     if isAdmin:
         print('yea?')
-        await channel.purge(limit=50, bulk=False, check=(lambda m : m.author.id == 187090775819943936))
+        await channel.purge(limit=count, check=(lambda m : str(m.author.id) == user_id))
