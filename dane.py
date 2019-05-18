@@ -4,10 +4,12 @@ import datetime
 import time
 from discord.ext import commands 
 from commands import *
+
+import reaction
 import courses
 
 client = commands.Bot(command_prefix='?', help_command=None)
-
+reactionBot = reaction.ReactionBot(client)
 with open('config/config.json') as f: # LOAD JSON FILE
     data = json.load(f) # LOAD JSON INTO data
 
@@ -15,6 +17,12 @@ CLIENT_TOKEN = data['token'] # STORE CLIENT TOKEN from JSON.
 
 # -----------------
 
+extensions = ['reaction']
+
+if __name__ == '__main__':
+    for extension in extensions:
+        client.load_extension(extension)
+        
 @client.command()
 async def help(ctx):
     await displayHelpDirectory(ctx.channel)
@@ -41,14 +49,18 @@ async def prune(ctx, user_id):
 @client.event
 async def on_command_error(ctx, error):
     print(error)
-    if ctx.command.name == 'prune':
-        # Send an embed
-        embed = discord.Embed()
-        embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
-        embed.description = 'Error: ' + str(error)
-        embed.color = 16042050
 
-        await ctx.channel.send(embed=embed)
+    if ctx.message.channel.permissions_for(ctx.message.author).administrator:
+        if ctx.command.name == 'prune':
+            # Send an embed
+            embed = discord.Embed()
+            embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
+            embed.description = 'Error: ' + str(error)
+            embed.color = 16042050
+
+            await ctx.channel.send(embed=embed)
+    else:
+        print('Non admin trying to use admin command')
 
 @client.event
 async def on_ready():
