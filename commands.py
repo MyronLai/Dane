@@ -149,4 +149,4 @@ async def assignUserBan(context, user_id, reason):
             print("Cannot ban another admin.")
         else:
             await context.guild.ban(userToBan, delete_message_days=1, reason=reason)
-    
+

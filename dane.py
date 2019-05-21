@@ -17,31 +17,14 @@ CLIENT_TOKEN = data['token'] # STORE CLIENT TOKEN from JSON.
 
 # -----------------
 
-extensions = ['reaction']
+extensions = ['reaction', 'TextCommands']
 
 if __name__ == '__main__':
     for extension in extensions:
         client.load_extension(extension)
-        
-@client.command()
-async def help(ctx):
-    await displayHelpDirectory(ctx.channel)
 
-@client.command()
-async def assign(ctx):
-    await assignRole(client, ctx.message)
 
-@client.command()
-async def remove(ctx):
-    await removeRole(client, ctx.message)
 
-@client.command()
-async def course(ctx):
-    await queryCourse(ctx, ctx.message)
-
-@client.command()
-async def ban(ctx, user_id, reason):
-    await assignUserBan(ctx, user_id, reason)
 
 '''
 mass delete messages using TextChannel.purge() function, must ensure that the command is issued by an Administrator, and that the user id provided is not of an Admin on the server.
