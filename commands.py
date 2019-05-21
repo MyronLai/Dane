@@ -150,3 +150,21 @@ async def assignUserBan(context, user_id, reason):
         else:
             await context.guild.ban(userToBan, delete_message_days=1, reason=reason)
 
+
+async def kickUser(ctx, user_id, reason):
+    admin = isAdmin(ctx, ctx.message.author.id)
+    
+    isUserToKickAnAdmin = isAdmin(ctx, user_id)
+    userToKick = discord.utils.get(ctx.guild.members, id=user_id)
+    if isUserToKickAnAdmin:
+        print('Cannot kick another admin with this command')
+    elif admin:
+        await ctx.guild.kick(userToKick, reason=reason)
+
+def isAdmin(ctx, user_id):
+    # Find User 
+    user = discord.utils.get(ctx.guild.members, id=int(user_id))
+    if user is not None:
+        return ctx.message.channel.permissions_for(user).administrator
+    else:
+        return False
