@@ -3,6 +3,7 @@ import discord
 import courses
 import re
 
+PRIORITY_CHANNELS = ['welcome', 'member-log', 'mod-logs', 'mod-channel', 'rules-and-info']
 def hasRole(member, role):
     memberRoles = member.roles
     currentRole = discord.utils.find(lambda r : r.name.lower() == role.lower(), memberRoles)
@@ -102,6 +103,10 @@ async def pruneMessages(message, user_id):
     isAdmin = message.author.permissions_in(message.channel).administrator
     owner = message.guild.owner
     channel = message.channel
+
+    if channel.name in PRIORITY_CHANNELS:
+        print("Cannot purge messages in a priority channel.")
+        return
     # If the user is an Admin, then we can proceed to prune the messages.
     if isAdmin:
         print('User is an admin. Deleting...')
@@ -125,5 +130,23 @@ async def pruneMessages(message, user_id):
     else:
         print('User is not an admin, not deleting.')
         
+'''
+Admins cannot ban other admins
+'''
+async def assignUserBan(context, user_id, reason):
+    message = context.message
+    isAdmin = message.channel.permissions_for(message.author).administrator
 
+    channel = context.channel
+
+    userToBan = discord.utils.get(context.guild.members, id=int(user_id))
+    if userToBan is not None:
+        # Check if user is an Administrator
+        print(userToBan.name)
+        isUserToBanAnAdmin = channel.permissions_for(userToBan).administrator
+        print(isUserToBanAnAdmin)
+        if isUserToBanAnAdmin:
+            print("Cannot ban another admin.")
+        else:
+            await context.guild.ban(userToBan, delete_message_days=1, reason=reason)
     

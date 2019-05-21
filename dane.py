@@ -39,6 +39,10 @@ async def remove(ctx):
 async def course(ctx):
     await queryCourse(ctx, ctx.message)
 
+@client.command()
+async def ban(ctx, user_id, reason):
+    await assignUserBan(ctx, user_id, reason)
+
 '''
 mass delete messages using TextChannel.purge() function, must ensure that the command is issued by an Administrator, and that the user id provided is not of an Admin on the server.
 '''
@@ -92,8 +96,13 @@ async def on_message_delete(message): # Print out a summary of the message delet
 
 @client.event
 async def on_member_join(member):
-    member_log_channel = discord.utils.get(member.server.channels, name='member-log')
-    authorName = member.name + "#" + member.discriminator + " <" + member.id + ">"
+    member_log_channel = discord.utils.get(member.guild.channels, name='member-log')
+    authorName = member.name + "#" + member.discriminator + " <" + str(member.id) + ">"
+    roles = discord.utils.get(member.guild.roles, name='Great Dane')
+    
+    if roles is not None:
+        await member.add_roles(roles)
+
     embed = discord.Embed(color=4303348)
     embed.set_author(name=authorName, icon_url=member.avatar_url)
     embed.set_footer(text="User joined")
@@ -102,25 +111,25 @@ async def on_member_join(member):
 
 @client.event
 async def on_member_remove(member):
-    member_log_channel = discord.utils.get(member.server.channels, name='member-log')
-    authorName = member.name + "#" + member.discriminator + " <" + member.id + ">"
+    member_log_channel = discord.utils.get(member.guild.channels, name='member-log')
+    authorName = member.name + "#" + member.discriminator + " <" + str(member.id) + ">"
     embed = discord.Embed(color=16007489)
     embed.set_author(name=authorName, icon_url=member.avatar_url)
     embed.set_footer(text="User left")
     await member_log_channel.send(embed=embed)
 
 @client.event
-async def on_member_ban(member):
-    member_log_channel = discord.utils.get(member.server.channels, name='mod-logs')
-    authorName = member.name + "#" + member.discriminator + " <" + member.id + ">"
+async def on_member_ban(guild, member):
+    member_log_channel = discord.utils.get(member.guild.channels, name='mod-logs')
+    authorName = member.name + "#" + member.discriminator + " <" + str(member.id) + ">"
     embed = discord.Embed(color=16029762)
     embed.set_author(name=authorName, icon_url=member.avatar_url)
     embed.set_footer(text="User Banned")
     await member_log_channel.send(embed=embed)
 
 @client.event
-async def on_member_unban(server, user):
-    member_log_channel = discord.utils.get(server.channels, name='mod-logs')
+async def on_member_unban(guild, user):
+    member_log_channel = discord.utils.get(guild.channels, name='mod-logs')
     authorName = user.name + "#" + user.discriminator + " <" + user.id + ">"
     embed = discord.Embed(color=8314597)
     embed.set_author(name=authorName, icon_url=user.avatar_url)
