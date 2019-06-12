@@ -2,6 +2,7 @@ import discord
 from commands import *
 from discord.ext import commands
 import courses
+import random
 
 class TextCommands(commands.Cog):
 
@@ -44,6 +45,16 @@ class TextCommands(commands.Cog):
     @commands.command()
     async def kick(self, ctx, user_id, reason):
         await kickUser(ctx, int(user_id), reason)
-
+        
+    @commands.command()
+    async def dice(self, ctx):
+        message = ctx.message
+        await message.channel.send('Would you like to roll the die? Y/N')
+        def check(m):
+            return (m.content.lower() == 'y' or m.content.lower() == 'yes') and m.author.id == message.author.id
+        
+        msg = await self.client.wait_for('message', check=check)
+        await message.channel.send('You rolled a ' +str(random.randint(1, 6)))
+        
 def setup(bot):
     bot.add_cog(TextCommands(bot))

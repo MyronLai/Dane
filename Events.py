@@ -171,7 +171,8 @@ class DaneBotEvents(commands.Cog):
                     embed.title = 'Level Up!'
                     embed.description = '<@'+str(message.author.id)+'> leveled up to level ' + str(currentLevel)
                     await message.channel.send(embed=embed)
-
+                else:
+                    pass
 
         except:
             print("Error.")
