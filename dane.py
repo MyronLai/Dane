@@ -2,7 +2,6 @@ import json
 import discord
 from discord.ext import commands 
 from commands import *
-
 import reaction
 
 client = commands.Bot(command_prefix='?', help_command=None)

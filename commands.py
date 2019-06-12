@@ -125,7 +125,6 @@ async def pruneMessages(message, user_id):
                 print("Deleting..")
                 await channel.purge(limit=50, check=(lambda m : int(m.author.id) == user_id))
 
-            
 
     else:
         print('User is not an admin, not deleting.')
@@ -149,7 +148,6 @@ async def assignUserBan(context, user_id, reason):
             print("Cannot ban another admin.")
         else:
             await context.guild.ban(userToBan, delete_message_days=1, reason=reason)
-
 
 async def kickUser(ctx, user_id, reason):
     admin = isAdmin(ctx, ctx.message.author.id)

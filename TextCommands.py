@@ -40,7 +40,7 @@ class TextCommands(commands.Cog):
     @commands.command()
     async def prune(self, ctx, user_id):
         await pruneMessages(ctx.message, int(user_id))
-
+    
     @commands.command()
     async def kick(self, ctx, user_id, reason):
         await kickUser(ctx, int(user_id), reason)

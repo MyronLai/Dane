@@ -2,14 +2,18 @@ import discord
 from discord.ext import commands
 import time
 import datetime 
+from database.database import load_db
 
 class DaneBotEvents(commands.Cog):
     def __init__(self, client):
         self.client = client
-    
+        self.database = load_db('./config/config.json')
+
     @commands.Cog.listener()
     async def on_ready(self):
-        print('Logged in as ' + self.client.user.name)
+        print('Logged in as ' + self.client.user.name + '#' + self.client.user.discriminator)
+        print(self.database)
+        await self.client.change_presence(activity=discord.Game('Coding for ' + str(len(self.client.guilds))  + ' guilds.'))
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -26,7 +30,6 @@ class DaneBotEvents(commands.Cog):
                 await ctx.channel.send(embed=embed)
         else:
             print('Non admin trying to use admin command')
-
     
     @commands.Cog.listener()
     async def on_message_delete(self, message): # Print out a summary of the message deleted
@@ -54,12 +57,15 @@ class DaneBotEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        member_log_channel = discord.utils.get(member.guild.channels, name='member-log')
-        authorName = member.name + "#" + member.discriminator + " <" + str(member.id) + ">"
-        roles = discord.utils.get(member.guild.roles, name='Great Dane')
-        
-        if roles is not None:
-            await member.add_roles(roles)
+        try:
+            cursor = self.database.cursor()
+            cursor.execute("INSERT INTO users VALUES(" +  str(member.id) + ","+ str(member.guild.id) + ")")
+            self.database.commit()
+            print('Inserted User to DB')
+        except Exception as err:
+            print(err)
+
+        # Add user to database
 
         embed = discord.Embed(color=4303348)
         embed.set_author(name=authorName, icon_url=member.avatar_url)
@@ -93,6 +99,14 @@ class DaneBotEvents(commands.Cog):
         embed.set_author(name=authorName, icon_url=user.avatar_url)
         embed.set_footer(text="User Unbanned")
         await member_log_channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        print(guild.id)
+        cursor = self.database.cursor()
+        cursor.execute("INSERT INTO Guilds VALUES(" + str(guild.id) + ", '!', DEFAULT, DEFAULT)")
+        self.database.commit()
+        print("Done.")
 
 '''
 function used to convert utc to local time
