@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import time
 import datetime 
+import random
 from database.database import load_db
 
 class DaneBotEvents(commands.Cog):
@@ -17,19 +18,10 @@ class DaneBotEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        print(error)
-
-        if ctx.message.channel.permissions_for(ctx.message.author).administrator:
-            if ctx.command.name == 'prune':
-                # Send an embed
-                embed = discord.Embed()
-                embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
-                embed.description = 'Error: ' + str(error)
-                embed.color = 16042050
-
-                await ctx.channel.send(embed=embed)
-        else:
-            print('Non admin trying to use admin command')
+        embed = discord.Embed()
+        embed.title = 'Error'
+        embed.description = str(error)
+        await ctx.channel.send(embed=embed)
     
     @commands.Cog.listener()
     async def on_message_delete(self, message): # Print out a summary of the message deleted
@@ -57,6 +49,8 @@ class DaneBotEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
+        
+        # Add user to database
         try:
             cursor = self.database.cursor()
             cursor.execute("INSERT INTO Users VALUES(" + str(member.id) + "," + str(member.guild.id) + ", DEFAULT)")
@@ -64,21 +58,25 @@ class DaneBotEvents(commands.Cog):
         except Exception as err:
             print(err)
 
-        # Add user to database
-
-        embed = discord.Embed(color=4303348)
-        embed.set_author(name=self.client.user.name, icon_url=member.avatar_url)
-        embed.set_footer(text="User joined")
-        # Add user to Great Dane Role. 
+        try:
+            embed = discord.Embed(color=4303348)
+            embed.set_author(name=self.client.user.name, icon_url=member.avatar_url)
+            embed.set_footer(text="User joined")
+            # Add user to Great Dane Role. 
+        except Exception as err:
+            print(err)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        member_log_channel = discord.utils.get(member.guild.channels, name='member-log')
-        authorName = member.name + "#" + member.discriminator + " <" + str(member.id) + ">"
-        embed = discord.Embed(color=16007489)
-        embed.set_author(name=authorName, icon_url=member.avatar_url)
-        embed.set_footer(text="User left")
-        await member_log_channel.send(embed=embed)
+        if member.bot:
+            pass
+        else:
+            member_log_channel = discord.utils.get(member.guild.channels, name='member-log')
+            authorName = member.name + "#" + member.discriminator + " <" + str(member.id) + ">"
+            embed = discord.Embed(color=16007489)
+            embed.set_author(name=authorName, icon_url=member.avatar_url)
+            embed.set_footer(text="User left")
+            await member_log_channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild, member):
@@ -117,6 +115,67 @@ class DaneBotEvents(commands.Cog):
         else:
             # Create Dane Log Channel.
             pass
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot:
+            return
+
+        if message.content.startswith(self.client.command_prefix):
+            pass
+        
+        xp = generate_xp()
+        print(xp)
+        # Give User XP
+        cursor = self.database.cursor()
+        cursor.execute("SELECT client_xp, client_level FROM UserLevelData WHERE client_id=" + str(message.author.id) + " AND guild_id = " + str(message.guild.id))
+        results = cursor.fetchall()
+        try:
+            if len(results) == 0:
+                cursor.execute("INSERT INTO UserLevelData VALUES(" + str(message.author.id) + ", " +  str(message.guild.id) + ",  " + str(xp) + ", 1)")
+                self.database.commit()
+                print("Done.")
+            else:
+                currentXP = results[0][0]
+                currentLevel = results[0][1]
+                updatedXP = int(currentXP) + xp
+                flag =  False
+
+                if updatedXP < 500:
+                    currentLevel = 1
+                elif updatedXP > 500 and currentXP < 1200:
+                    if currentLevel != 2:
+                        currentLevel = 2
+                        flag = True
+                elif updatedXP > 1200 and currentXP < 2500:
+                    if currentLevel != 3:
+                        currentLevel = 3
+                        flag = True
+                elif updatedXP > 2500 and currentXP < 3950:
+                    if currentLevel != 4:
+                        currentLevel = 4
+                        flag = True
+                else:
+                    pass
+
+                # Update User XP and Level
+                try:
+                    cursor.execute("UPDATE UserLevelData SET client_xp = " + str(updatedXP) + ", client_level = " + str(currentLevel))
+                    self.database.commit()
+                    print('updated user xp')
+                except Exception as err:
+                    print(err)
+
+                if flag:
+                    # Send embed
+                    embed = discord.Embed()
+                    embed.title = 'Level Up!'
+                    embed.description = '<@'+str(message.author.id)+'> leveled up to level ' + str(currentLevel)
+                    await message.channel.send(embed=embed)
+
+
+        except:
+            print("Error.")
+        # give xp
 
 '''
 function used to convert utc to local time
@@ -127,6 +186,8 @@ def utc_to_local(dt):
     else:
         return dt - datetime.timedelta(seconds = time.timezone)
 
+def generate_xp():
+    return random.randint(1, 150)
 
 def setup(bot):
     bot.add_cog(DaneBotEvents(bot))

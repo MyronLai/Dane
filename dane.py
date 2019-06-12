@@ -1,10 +1,9 @@
 import json
 import discord
 from discord.ext import commands 
-from commands import *
 import reaction
 
-client = commands.Bot(command_prefix='?', help_command=None)
+client = commands.Bot(command_prefix='!', help_command=None)
 reactionBot = reaction.ReactionBot(client)
 with open('config/config.json') as f: # LOAD JSON FILE
     data = json.load(f) # LOAD JSON INTO data
