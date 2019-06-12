@@ -59,19 +59,17 @@ class DaneBotEvents(commands.Cog):
     async def on_member_join(self, member):
         try:
             cursor = self.database.cursor()
-            cursor.execute("INSERT INTO users VALUES(" +  str(member.id) + ","+ str(member.guild.id) + ")")
+            cursor.execute("INSERT INTO Users VALUES(" + str(member.id) + "," + str(member.guild.id) + ", DEFAULT)")
             self.database.commit()
-            print('Inserted User to DB')
         except Exception as err:
             print(err)
 
         # Add user to database
 
         embed = discord.Embed(color=4303348)
-        embed.set_author(name=authorName, icon_url=member.avatar_url)
+        embed.set_author(name=self.client.user.name, icon_url=member.avatar_url)
         embed.set_footer(text="User joined")
         # Add user to Great Dane Role. 
-        await member_log_channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
@@ -107,6 +105,18 @@ class DaneBotEvents(commands.Cog):
         cursor.execute("INSERT INTO Guilds VALUES(" + str(guild.id) + ", '!', DEFAULT, DEFAULT)")
         self.database.commit()
         print("Done.")
+
+        # Every Guild needs a mod-logs channel, mute role
+
+        dane_logs_channel = discord.utils.get(guild.channels, name='dane-logs')
+        if dane_logs_channel is not None:
+            embed = discord.Embed()
+            embed.title = 'Dane Bot Joined ' + guild.name
+            embed.description = 'Dane Bot automatically looks for the channel dane-logs and keeps all mod and error messages in there.'
+            await dane_logs_channel.send(embed=embed)
+        else:
+            # Create Dane Log Channel.
+            pass
 
 '''
 function used to convert utc to local time

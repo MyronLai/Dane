@@ -8,14 +8,10 @@ CREATE TABLE Guilds (
 )
 
 CREATE TABLE Users (
-    client_id BIGINT NOT NULL PRIMARY KEY
-)
-
-CREATE TABLE UserGuilds (
     client_id BIGINT NOT NULL,
     guild_id BIGINT NOT NULL,
-    FOREIGN KEY (client_id) REFERENCES Users(client_id),
-    FOREIGN KEY (guild_id) REFERENCES Guilds(guild_id)
+    joinDate DATE NOT NULL,
+    PRIMARY KEY (client_id, guild_id)
 )
 
 CREATE TABLE UserLevelData (
