@@ -97,14 +97,20 @@ async def queryCourse(client, message):
     args = message.content.split(" ")
     print(args)
     course_results = await courses.getCourses(args[1], args[2])
-    for currentCourse in course_results['courses']:
-        embed = discord.Embed()
-        embed.color = 4382708
-        embed.add_field(name="Class Number", value=currentCourse['class'])
-        embed.add_field(name="Class Info", value=currentCourse['courseInfo'])
-        embed.add_field(name="Meeting", value=currentCourse['meeting'])
-        embed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
-        embed.set_footer(text="Fall 2019 Semester")
+    embed = discord.Embed()
+    if len(course_results['courses']) != 0:
+        for currentCourse in course_results['courses']:
+            embed.color = 4382708
+            embed.add_field(name="Class Number", value=currentCourse['class'])
+            embed.add_field(name="Class Info", value=currentCourse['courseInfo'])
+            embed.add_field(name="Meeting", value=currentCourse['meeting'])
+            embed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
+            embed.set_footer(text="Fall 2019 Semester")
+            await message.channel.send(embed=embed)
+    else:
+        embed.title='Error. Course not found'
+        embed.description=args[1].upper() + ' ' + args[2] + ' was not found. Please try another search'
+        embed.color=9633965
         await message.channel.send(embed=embed)
 
 # THIS IS AN ADMIN FUNCTION 

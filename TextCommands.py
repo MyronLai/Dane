@@ -86,13 +86,12 @@ class TextCommands(commands.Cog):
                 print("Role does not exist.")
         except Exception as err:
             print(err)
-            
+
     @commands.command()
     async def sethelpcmd(self, ctx):
         if ctx.channel.permissions_for(ctx.author).administrator:
             message = ctx.message
             await message.channel.send("Please enter your message. To separate lines, make sure to add a \\n.")
-            
             def check(m):
                 return (m.author == ctx.author) or (m.author == ctx.author and m.content == 'yes')
             
