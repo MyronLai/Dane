@@ -4,8 +4,10 @@ import time
 import datetime 
 import random
 from database.database import load_db
+import threading
+import asyncio
 
-bucket = commands.CooldownMapping.from_cooldown(2, 2, commands.BucketType.member)
+bucket = commands.CooldownMapping.from_cooldown(3, 5, commands.BucketType.member)
 
 count = 0
 
@@ -123,7 +125,13 @@ class DaneBotEvents(commands.Cog):
         global count
         if message.author.bot:
             return
-        
+        '''
+        if user is spamming, the bot will mute them.
+        The bot queries the database to find the mute_role, which is the role to apply to the user.
+        If mute_role is 0, then the bot will create a role called 'Muted by Dane' with permissions preventing the user from sending messages.
+        The bot will update the column mute_role with the role id, and then overwrite all channel permissions for the new Muted role, and then adds the user to the role.
+        '''
+
         if bucket.update_rate_limit(message):
             cursor = self.database.cursor()
             cursor.execute("SELECT mute_role FROM Guilds where guild_id = " + str(message.guild.id))
@@ -150,67 +158,73 @@ class DaneBotEvents(commands.Cog):
                 if role is not None:
                     print(role)
                     await message.author.add_roles(role, reason="User was spamming.")
-                
-            
+
             # Mute them for 60 seconds.
+            unmuted_role = discord.utils.get(message.guild.roles, name='Muted by Dane')
+            embed = discord.Embed()
+            embed.title='Administrator Message'
+            embed.description=message.author.name + ' was muted for 60 seconds.'
+            await message.channel.send(embed=embed)
+            await asyncio.sleep(60) # Sleep for 60 seconds, and then unmute the user.
+            await message.author.remove_roles(unmuted_role, reason="Unmuting...")
             return
-        if message.content.startswith(self.client.command_prefix):
-            pass
-        
-        xp = generate_xp()
-        print(xp)
-        # Give User XP
-        cursor = self.database.cursor()
-        cursor.execute("SELECT client_xp, client_level FROM UserLevelData WHERE client_id=" + str(message.author.id) + " AND guild_id = " + str(message.guild.id))
-        results = cursor.fetchall()
-        try:
-            if len(results) == 0:
-                cursor.execute("INSERT INTO UserLevelData VALUES(" + str(message.author.id) + ", " +  str(message.guild.id) + ",  " + str(xp) + ", 1)")
-                self.database.commit()
-                print("Done.")
-            else:
-                currentXP = results[0][0]
-                currentLevel = results[0][1]
-                updatedXP = int(currentXP) + xp
-                flag =  False
-
-                if updatedXP < 500:
-                    currentLevel = 1
-                elif updatedXP > 500 and currentXP < 1200:
-                    if currentLevel != 2:
-                        currentLevel = 2
-                        flag = True
-                elif updatedXP > 1200 and currentXP < 2500:
-                    if currentLevel != 3:
-                        currentLevel = 3
-                        flag = True
-                elif updatedXP > 2500 and currentXP < 3950:
-                    if currentLevel != 4:
-                        currentLevel = 4
-                        flag = True
-                else:
-                    pass
-
-                # Update User XP and Level
-                try:
-                    cursor.execute("UPDATE UserLevelData SET client_xp = " + str(updatedXP) + ", client_level = " + str(currentLevel))
+        elif message.content.startswith(self.client.command_prefix):
+            return
+        else:
+            xp = generate_xp()
+            print(xp)
+            # Give User XP
+            cursor = self.database.cursor()
+            cursor.execute("SELECT client_xp, client_level FROM UserLevelData WHERE client_id=" + str(message.author.id) + " AND guild_id = " + str(message.guild.id))
+            results = cursor.fetchall()
+            try:
+                if len(results) == 0:
+                    cursor.execute("INSERT INTO UserLevelData VALUES(" + str(message.author.id) + ", " +  str(message.guild.id) + ",  " + str(xp) + ", 1)")
                     self.database.commit()
-                    print('updated user xp')
-                except Exception as err:
-                    print(err)
-
-                if flag:
-                    # Send embed
-                    embed = discord.Embed()
-                    embed.title = 'Level Up!'
-                    embed.description = '<@'+str(message.author.id)+'> leveled up to level ' + str(currentLevel)
-                    await message.channel.send(embed=embed)
+                    print("Done.")
                 else:
-                    pass
+                    currentXP = results[0][0]
+                    currentLevel = results[0][1]
+                    updatedXP = int(currentXP) + xp
+                    flag =  False
 
-        except:
-            print("Error.")
-        # give xp
+                    if updatedXP < 500:
+                        currentLevel = 1
+                    elif updatedXP > 500 and currentXP < 1200:
+                        if currentLevel != 2:
+                            currentLevel = 2
+                            flag = True
+                    elif updatedXP > 1200 and currentXP < 2500:
+                        if currentLevel != 3:
+                            currentLevel = 3
+                            flag = True
+                    elif updatedXP > 2500 and currentXP < 3950:
+                        if currentLevel != 4:
+                            currentLevel = 4
+                            flag = True
+                    else:
+                        pass
+
+                    # Update User XP and Level
+                    try:
+                        cursor.execute("UPDATE UserLevelData SET client_xp = " + str(updatedXP) + ", client_level = " + str(currentLevel))
+                        self.database.commit()
+                        print('updated user xp')
+                    except Exception as err:
+                        print(err)
+
+                    if flag:
+                        # Send embed
+                        embed = discord.Embed()
+                        embed.title = 'Level Up!'
+                        embed.description = '<@'+str(message.author.id)+'> leveled up to level ' + str(currentLevel)
+                        await message.channel.send(embed=embed)
+                    else:
+                        pass
+
+            except Exception as err:
+                print(err)
+            # give xp
 
 '''
 function used to convert utc to local time

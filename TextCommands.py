@@ -92,7 +92,7 @@ class TextCommands(commands.Cog):
 
             cursor.execute('UPDATE Guilds SET mute_role = ' + str(muted_role.id) + ' WHERE guild_id = ' + str(message.guild.id))
             self.database.commit()
-            await member_to_mute.add_roles(muted_role.id, reason=mute_reason)
+            await member_to_mute.add_roles(muted_role, reason=mute_reason)
         else:
             role = discord.utils.get(message.guild.roles, id=mute_role_id)
             if role is not None:
