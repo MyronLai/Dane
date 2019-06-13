@@ -7,7 +7,7 @@ from database.database import load_db
 import threading
 import asyncio
 
-bucket = commands.CooldownMapping.from_cooldown(3, 5, commands.BucketType.member)
+bucket = commands.CooldownMapping.from_cooldown(5, 3, commands.BucketType.member)
 
 count = 0
 
@@ -83,7 +83,7 @@ class DaneBotEvents(commands.Cog):
             embed.set_author(name=authorName, icon_url=member.avatar_url)
             embed.set_footer(text="User left")
             await member_log_channel.send(embed=embed)
-
+    
     @commands.Cog.listener()
     async def on_member_ban(self, guild, member):
         member_log_channel = discord.utils.get(member.guild.channels, name='mod-logs')
@@ -125,12 +125,6 @@ class DaneBotEvents(commands.Cog):
         global count
         if message.author.bot:
             return
-        '''
-        if user is spamming, the bot will mute them.
-        The bot queries the database to find the mute_role, which is the role to apply to the user.
-        If mute_role is 0, then the bot will create a role called 'Muted by Dane' with permissions preventing the user from sending messages.
-        The bot will update the column mute_role with the role id, and then overwrite all channel permissions for the new Muted role, and then adds the user to the role.
-        '''
         if bucket.update_rate_limit(message):
             print(message.author.name + ' is sending messages too fast!')
             #cursor = self.database.cursor()
@@ -139,7 +133,7 @@ class DaneBotEvents(commands.Cog):
             muted_role = discord.utils.find(lambda role: role.name == 'Muted by Dane', message.guild.roles)
             if muted_role is not None:
                 print("Role exists.")
-                await message.author.add_roles(muted_role, reason="Spamming")
+                all_channels = message.guild.channels
             else:
                 muted_role = await message.guild.create_role(name='Muted by Dane') # Create the role...
                 all_channels = message.guild.channels
@@ -150,20 +144,21 @@ class DaneBotEvents(commands.Cog):
                 for channel in all_channels:
                     if channel.permissions_for(message.guild.me).manage_roles: # If the bot can manage permissions for channel, then overrwrite.
                         await channel.set_permissions(muted_role, overwrite=overwrite)
-                    else:
-                        print("No permissions to update roles for channel " + channel.name)
 
                 # Mute the user by giving them the Muted role.
                 await message.author.add_roles(muted_role, reason="User was spamming.")
+
             embed = discord.Embed()
             embed.title='Administrator Message'
-            embed.description=message.author.name + ' was muted for 10 seconds.'
+            embed.description=message.author.name + ' was muted for 60 seconds.'
             await message.channel.send(embed=embed)
-            await asyncio.sleep(10) # Sleep for 60 seconds, and then unmute the user.
+            await asyncio.sleep(60) # Sleep for 60 seconds, and then unmute the user.
             await message.author.remove_roles(muted_role, reason="Unmuting...")
             return
+        
         elif message.content.startswith(self.client.command_prefix):
             return
+
         else:
             xp = generate_xp()
             # Give User XP
@@ -195,13 +190,14 @@ class DaneBotEvents(commands.Cog):
                         if currentLevel != 4:
                             currentLevel = 4
                             flag = True
+                    
                     else:
                         pass
                     # Update User XP and Level
                     try:
                         cursor.execute("UPDATE UserLevelData SET client_xp = " + str(updatedXP) + ", client_level = " + str(currentLevel) +" WHERE client_id = " + str(message.author.id) + " AND guild_id=" + str(message.guild.id))
                         self.database.commit()
-                        print('updated user xp for ' + message.author.name)
+                        # print('updated user xp for ' + message.author.name)
                     except Exception as err:
                         print(err)
 
