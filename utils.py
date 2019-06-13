@@ -122,20 +122,18 @@ async def queryCourse(client, message):
                         currentEmbed.color = 4382708
                     i += 5
                 else:
-                    arrayOfEmbeds.append(currentEmbed.copy())
-                    currentEmbed = discord.Embed()
+                    arrayOfEmbeds.append(currentEmbed.copy()) # Add a copy of the embed
+                    currentEmbed = discord.Embed() # Reset the embed to a new objeect.
                     i = 0
             
-            if len(arrayOfEmbeds) == 0:
-                print('yes')
-                await message.channel.send(embed=currentEmbed)
+            if len(arrayOfEmbeds) == 0: # If the length of the array is 0, that means an embed of less than 25 fields was built.
                 currentEmbed.set_footer(text="Fall 2019 Semester")
-                arrayOfEmbeds.append(currentEmbed)
-            else:
-                print("There's still one more  embed")
+                arrayOfEmbeds.append(currentEmbed.copy())
+
+            else: # The last embed was not added, so add it to the array.
                 arrayOfEmbeds.append(currentEmbed.copy())
                 
-            for embed in arrayOfEmbeds:
+            for embed in arrayOfEmbeds: # Iterate through all embeds and send them.
                 await message.channel.send(embed=embed)
 
         else:
@@ -143,32 +141,57 @@ async def queryCourse(client, message):
             currentEmbed.description=args[1].upper() + ' ' + args[2] + ' was not found. Please try another search'
             currentEmbed.color=9633965
             await message.channel.send(embed=currentEmbed)
+
     elif len(args) == 4: # If 4, they specified a professor.
         course_results = await courses.getCourses(args[1], args[2])
         currentEmbed = discord.Embed()
         search_term = args[3]
         print(search_term)
-        i = 0
-        for currentCourse in course_results['courses']:
-            meeting = currentCourse['meeting'].strip()
-            result = re.search(search_term.lower(), meeting.lower())
-            if result is not None:
-                if i < 25:
-                    if i != 20:
-                        currentEmbed.add_field(name="Class Number", value=currentCourse['class'])
-                        currentEmbed.add_field(name="Class Info", value=currentCourse['courseInfo'])
-                        currentEmbed.add_field(name="Meeting", value=currentCourse['meeting'])
-                        currentEmbed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
-                        currentEmbed.add_field(name="\u200b", value="\u200b",inline=False)
-                        currentEmbed.color = 4382708
+        if len(course_results['courses']) != 0:
+            arrayOfEmbeds = []
+            i = 0
+            for currentCourse in course_results['courses']:
+                meeting = currentCourse['meeting'].strip()
+                result = re.search(search_term.lower(), meeting.lower())
+                if result is not None:
+                    print("Found for " + meeting)
+                    if i < 25:
+                        if i != 20:
+                            currentEmbed.add_field(name="Class Number", value=currentCourse['class'])
+                            currentEmbed.add_field(name="Class Info", value=currentCourse['courseInfo'])
+                            currentEmbed.add_field(name="Meeting", value=currentCourse['meeting'])
+                            currentEmbed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
+                            currentEmbed.add_field(name="\u200b", value="\u200b",inline=False)
+                            currentEmbed.color = 4382708
+                        else:
+                            currentEmbed.add_field(name="Class Number", value=currentCourse['class'])
+                            currentEmbed.add_field(name="Class Info", value=currentCourse['courseInfo'])
+                            currentEmbed.add_field(name="Meeting", value=currentCourse['meeting'])
+                            currentEmbed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
+                            currentEmbed.set_footer(text="Fall 2019 Semester") # Set footer because this is the last result of embed.
+                            currentEmbed.color = 4382708
+                        i+=5
                     else:
-                        currentEmbed.add_field(name="Class Number", value=currentCourse['class'])
-                        currentEmbed.add_field(name="Class Info", value=currentCourse['courseInfo'])
-                        currentEmbed.add_field(name="Meeting", value=currentCourse['meeting'])
-                        currentEmbed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
-                        currentEmbed.set_footer(text="Fall 2019 Semester") # Set footer because this is the last result of embed.
-                        currentEmbed.color = 4382708
-                    
+                        arrayOfEmbeds.append(currentEmbed.copy()) # Add a copy of the embed
+                        currentEmbed = discord.Embed() # Reset the embed to a new objeect.
+                        i = 0
+                   
+            if len(arrayOfEmbeds) == 0: # If the length of the array is 0, that means an embed of less than 25 fields was built.
+                if len(currentEmbed.fields) == 0:
+                    # No professors were found.
+                    currentEmbed.description='No course was found.'
+                    arrayOfEmbeds.append(currentEmbed.copy())
+                else:
+                    currentEmbed.set_footer(text="Fall 2019 Semester")
+                    print('yes, empty')
+                    arrayOfEmbeds.append(currentEmbed.copy()) # Add a copy.
+
+            else: # The last embed was not added, so add it to the array.
+                currentEmbed.set_footer(text="Fall 2019 Semester")
+                arrayOfEmbeds.append(currentEmbed.copy())
+                
+            for embed in arrayOfEmbeds: # Iterate through all embeds and send them.
+                await message.channel.send(embed=embed)
 
         
     else:
