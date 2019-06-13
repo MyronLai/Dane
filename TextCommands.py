@@ -60,22 +60,20 @@ class TextCommands(commands.Cog):
     @commands.command()
     async def unmute(self, ctx, user_id):
         message = ctx.message
-        all_channels = message.guild.channels
         member_to_unmute = discord.utils.get(message.guild.members, id=int(user_id))
         if member_to_unmute is not None:
             print("Trying to unmute " + member_to_unmute.name)
-            for channel in all_channels:
-                perms = channel.permissions_for(member_to_unmute)
-                if perms.read_messages and perms.send_messages == False:
-                    print("Yes...")
-                    await channel.set_permissions(member_to_unmute, send_messages=True)
-                else:
-                    print("no. they can't read msgs in " + channel.name)
-            
-            print("Unmuted.")
+            muted_role = discord.utils.get(message.guild.roles, name='Muted by Dane')
+            if muted_role is not None:
+                await member_to_unmute.remove_roles(muted_role, reason="Unmuted by admin.")
+            else:
+                print("Muted by Dane role was not found.")
         else:
             print("Member not found")
 
-        
+    @commands.command()
+    async def mute(self, ctx, user_id):
+        message = ctx.message
+
 def setup(bot):
     bot.add_cog(TextCommands(bot))
