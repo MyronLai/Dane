@@ -95,48 +95,88 @@ async def removeRole(client, message):
 async def queryCourse(client, message):
 
     args = message.content.split(" ")
-    course_results = await courses.getCourses(args[1], args[2])
+    
+    if len(args) == 3:
+        course_results = await courses.getCourses(args[1], args[2])
 
-    currentEmbed = discord.Embed()
-    if len(course_results['courses']) != 0:
-        arrayOfEmbeds = []
+        if len(course_results['courses']) != 0:
+            arrayOfEmbeds = []
 
+            i = 0
+            currentEmbed = discord.Embed()
+            for currentCourse in course_results['courses']:
+                if i < 25: # New Embed with max 25 fields.
+                    if i != 20: # Only append blank fields if the result isn't the last result.
+                        currentEmbed.add_field(name="Class Number", value=currentCourse['class'])
+                        currentEmbed.add_field(name="Class Info", value=currentCourse['courseInfo'])
+                        currentEmbed.add_field(name="Meeting", value=currentCourse['meeting'])
+                        currentEmbed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
+                        currentEmbed.add_field(name="\u200b", value="\u200b",inline=False)
+                        currentEmbed.color = 4382708
+                    else:
+                        currentEmbed.add_field(name="Class Number", value=currentCourse['class'])
+                        currentEmbed.add_field(name="Class Info", value=currentCourse['courseInfo'])
+                        currentEmbed.add_field(name="Meeting", value=currentCourse['meeting'])
+                        currentEmbed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
+                        currentEmbed.set_footer(text="Fall 2019 Semester") # Set footer because this is the last result of embed.
+                        currentEmbed.color = 4382708
+                    i += 5
+                else:
+                    arrayOfEmbeds.append(currentEmbed.copy())
+                    currentEmbed = discord.Embed()
+                    i = 0
+            
+            if len(arrayOfEmbeds) == 0:
+                print('yes')
+                await message.channel.send(embed=currentEmbed)
+                currentEmbed.set_footer(text="Fall 2019 Semester")
+                arrayOfEmbeds.append(currentEmbed)
+            else:
+                print("There's still one more  embed")
+                arrayOfEmbeds.append(currentEmbed.copy())
+                
+            for embed in arrayOfEmbeds:
+                await message.channel.send(embed=embed)
+
+        else:
+            currentEmbed.title='Error. Course not found'
+            currentEmbed.description=args[1].upper() + ' ' + args[2] + ' was not found. Please try another search'
+            currentEmbed.color=9633965
+            await message.channel.send(embed=currentEmbed)
+    elif len(args) == 4: # If 4, they specified a professor.
+        course_results = await courses.getCourses(args[1], args[2])
+        currentEmbed = discord.Embed()
+        search_term = args[3]
+        print(search_term)
         i = 0
         for currentCourse in course_results['courses']:
-            if i < 25: # New Embed with max 25 fields.
-                if i != 20: # Only append blank fields if the result isn't the last result.
-                    currentEmbed.add_field(name="Class Number", value=currentCourse['class'])
-                    currentEmbed.add_field(name="Class Info", value=currentCourse['courseInfo'])
-                    currentEmbed.add_field(name="Meeting", value=currentCourse['meeting'])
-                    currentEmbed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
-                    currentEmbed.add_field(name="\u200b", value="\u200b",inline=False)
-                    currentEmbed.color = 4382708
-                else:
-                    currentEmbed.add_field(name="Class Number", value=currentCourse['class'])
-                    currentEmbed.add_field(name="Class Info", value=currentCourse['courseInfo'])
-                    currentEmbed.add_field(name="Meeting", value=currentCourse['meeting'])
-                    currentEmbed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
-                    currentEmbed.set_footer(text="Fall 2019 Semester") # Set footer because this is the last result of embed.
-                    currentEmbed.color = 4382708
-                i += 5
-            else:
-                await message.channel.send(embed=currentEmbed)
-                arrayOfEmbeds.append(currentEmbed)
-                currentEmbed.clear_fields()
-                i = 0
+            meeting = currentCourse['meeting'].strip()
+            result = re.search(search_term.lower(), meeting.lower())
+            if result is not None:
+                if i < 25:
+                    if i != 20:
+                        currentEmbed.add_field(name="Class Number", value=currentCourse['class'])
+                        currentEmbed.add_field(name="Class Info", value=currentCourse['courseInfo'])
+                        currentEmbed.add_field(name="Meeting", value=currentCourse['meeting'])
+                        currentEmbed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
+                        currentEmbed.add_field(name="\u200b", value="\u200b",inline=False)
+                        currentEmbed.color = 4382708
+                    else:
+                        currentEmbed.add_field(name="Class Number", value=currentCourse['class'])
+                        currentEmbed.add_field(name="Class Info", value=currentCourse['courseInfo'])
+                        currentEmbed.add_field(name="Meeting", value=currentCourse['meeting'])
+                        currentEmbed.add_field(name="Seats Left", value=currentCourse['seatsLeft'], inline=False)
+                        currentEmbed.set_footer(text="Fall 2019 Semester") # Set footer because this is the last result of embed.
+                        currentEmbed.color = 4382708
+                    
+
         
-        if len(arrayOfEmbeds) == 0:
-            currentEmbed.set_footer(text="Fall 2019 Semester")
-            arrayOfEmbeds.append(currentEmbed)
-        
-        for embed in arrayOfEmbeds:
-            await message.channel.send(embed=embed)
     else:
-        currentEmbed.title='Error. Course not found'
-        currentEmbed.description=args[1].upper() + ' ' + args[2] + ' was not found. Please try another search'
-        currentEmbed.color=9633965
-        await message.channel.send(embed=currentEmbed)
-    
+        embed=discord.Embed()
+        embed.title='API Error'
+        embed.description='Too many arguments. Usage: ?course <subject> <code> <professor?>'
+        embed.color=9633965
+        await message.channel.send(embed=embed)
 
 # THIS IS AN ADMIN FUNCTION 
 async def pruneMessages(message, user_id):
