@@ -4,6 +4,7 @@ from discord.ext import commands
 import courses
 import random
 
+
 class TextCommands(commands.Cog):
 
     def __init__(self, client):
@@ -55,6 +56,26 @@ class TextCommands(commands.Cog):
         
         msg = await self.client.wait_for('message', check=check)
         await message.channel.send('You rolled a ' +str(random.randint(1, 6)))
+
+    @commands.command()
+    async def unmute(self, ctx, user_id):
+        message = ctx.message
+        all_channels = message.guild.channels
+        member_to_unmute = discord.utils.get(message.guild.members, id=int(user_id))
+        if member_to_unmute is not None:
+            print("Trying to unmute " + member_to_unmute.name)
+            for channel in all_channels:
+                perms = channel.permissions_for(member_to_unmute)
+                if perms.read_messages and perms.send_messages == False:
+                    print("Yes...")
+                    await channel.set_permissions(member_to_unmute, send_messages=True)
+                else:
+                    print("no. they can't read msgs in " + channel.name)
+            
+            print("Unmuted.")
+        else:
+            print("Member not found")
+
         
 def setup(bot):
     bot.add_cog(TextCommands(bot))
