@@ -131,48 +131,41 @@ class DaneBotEvents(commands.Cog):
         If mute_role is 0, then the bot will create a role called 'Muted by Dane' with permissions preventing the user from sending messages.
         The bot will update the column mute_role with the role id, and then overwrite all channel permissions for the new Muted role, and then adds the user to the role.
         '''
-
         if bucket.update_rate_limit(message):
-            cursor = self.database.cursor()
-            cursor.execute("SELECT mute_role FROM Guilds where guild_id = " + str(message.guild.id))
-            result = cursor.fetchall()
-            mute_role_id = result[0][0]
-            if mute_role_id == 0:
-                # Create a new role.
-                muted_role = await message.guild.create_role(name='Muted by Dane')
+            print(message.author.name + ' is sending messages too fast!')
+            #cursor = self.database.cursor()
+            #cursor.execute("SELECT mute_role FROM Guilds where guild_id = " + str(message.guild.id))
+
+            muted_role = discord.utils.find(lambda role: role.name == 'Muted by Dane', message.guild.roles)
+            if muted_role is not None:
+                print("Role exists.")
+                await message.author.add_roles(muted_role, reason="Spamming")
+            else:
+                muted_role = await message.guild.create_role(name='Muted by Dane') # Create the role...
                 all_channels = message.guild.channels
                 overwrite = discord.PermissionOverwrite()
                 overwrite.send_messages=False
                 overwrite.read_messages=True
+
                 for channel in all_channels:
                     if channel.permissions_for(message.guild.me).manage_roles: # If the bot can manage permissions for channel, then overrwrite.
                         await channel.set_permissions(muted_role, overwrite=overwrite)
+                    else:
+                        print("No permissions to update roles for channel " + channel.name)
 
-                cursor.execute('UPDATE Guilds SET mute_role = ' + str(muted_role.id) + ' WHERE guild_id = ' + str(message.guild.id))
-                self.database.commit()
-                
                 # Mute the user by giving them the Muted role.
-                await message.author.add_roles(muted_role.id, reason="User was spamming.")
-            else:
-                role = discord.utils.get(message.guild.roles, id=mute_role_id)
-                if role is not None:
-                    print(role)
-                    await message.author.add_roles(role, reason="User was spamming.")
-
-            # Mute them for 60 seconds.
-            unmuted_role = discord.utils.get(message.guild.roles, name='Muted by Dane')
+                await message.author.add_roles(muted_role, reason="User was spamming.")
             embed = discord.Embed()
             embed.title='Administrator Message'
-            embed.description=message.author.name + ' was muted for 60 seconds.'
+            embed.description=message.author.name + ' was muted for 10 seconds.'
             await message.channel.send(embed=embed)
-            await asyncio.sleep(60) # Sleep for 60 seconds, and then unmute the user.
-            await message.author.remove_roles(unmuted_role, reason="Unmuting...")
+            await asyncio.sleep(10) # Sleep for 60 seconds, and then unmute the user.
+            await message.author.remove_roles(muted_role, reason="Unmuting...")
             return
         elif message.content.startswith(self.client.command_prefix):
             return
         else:
             xp = generate_xp()
-            print(xp)
             # Give User XP
             cursor = self.database.cursor()
             cursor.execute("SELECT client_xp, client_level FROM UserLevelData WHERE client_id=" + str(message.author.id) + " AND guild_id = " + str(message.guild.id))
@@ -204,12 +197,11 @@ class DaneBotEvents(commands.Cog):
                             flag = True
                     else:
                         pass
-
                     # Update User XP and Level
                     try:
-                        cursor.execute("UPDATE UserLevelData SET client_xp = " + str(updatedXP) + ", client_level = " + str(currentLevel))
+                        cursor.execute("UPDATE UserLevelData SET client_xp = " + str(updatedXP) + ", client_level = " + str(currentLevel) +" WHERE client_id = " + str(message.author.id) + " AND guild_id=" + str(message.guild.id))
                         self.database.commit()
-                        print('updated user xp')
+                        print('updated user xp for ' + message.author.name)
                     except Exception as err:
                         print(err)
 

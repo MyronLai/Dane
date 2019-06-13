@@ -76,29 +76,16 @@ class TextCommands(commands.Cog):
     async def mute(self, ctx, user_id, mute_reason):
         message = ctx.message
         member_to_mute = discord.utils.get(ctx.guild.members, id=int(user_id))
-        cursor = self.database.cursor()
-        cursor.execute("SELECT mute_role FROM Guilds where guild_id = " + str(message.guild.id))
-        result = cursor.fetchall()
-        mute_role_id = result[0][0]
-        if mute_role_id == 0:
-            muted_role = await message.guild.create_role(name='Muted by Dane')
-            all_channels = message.guild.channels
-            overwrite = discord.PermissionOverwrite()
-            overwrite.send_messages=False
-            overwrite.read_messages=True
-            for channel in all_channels:
-                if channel.permissions_for(message.guild.me).manage_roles: # If the bot can manage permissions for channel, then overrwrite.
-                    await channel.set_permissions(muted_role, overwrite=overwrite)
+        mute_role = discord.utils.find(lambda role: role.name=='Muted by Dane', ctx.guild.roles)
 
-            cursor.execute('UPDATE Guilds SET mute_role = ' + str(muted_role.id) + ' WHERE guild_id = ' + str(message.guild.id))
-            self.database.commit()
-            await member_to_mute.add_roles(muted_role, reason=mute_reason)
-        else:
-            role = discord.utils.get(message.guild.roles, id=mute_role_id)
-            if role is not None:
-                print(role)
-                await member_to_mute.add_roles(role, reason="User was spamming.")
-            
+        try:
+            if mute_role is not None:
+                print("Muting user.")
+                await member_to_mute.add_roles(mute_role, reason="Muted by admin")
+            else:
+                print("Role does not exist.")
+        except Exception as err:
+            print(err)
 
 
 def setup(bot):
