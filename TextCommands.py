@@ -1,5 +1,5 @@
 import discord
-from commands import *
+from utils import *
 from discord.ext import commands
 import courses
 import random
@@ -13,7 +13,7 @@ class TextCommands(commands.Cog):
     
     @commands.command()
     async def help(self, ctx):
-        await displayHelpDirectory(ctx.channel)
+        await display_help(ctx, self.database)
 
     @commands.command()
     async def assign(self, ctx):

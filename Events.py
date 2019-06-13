@@ -140,7 +140,7 @@ class DaneBotEvents(commands.Cog):
                 overwrite = discord.PermissionOverwrite()
                 overwrite.send_messages=False
                 overwrite.read_messages=True
-
+                
                 for channel in all_channels:
                     if channel.permissions_for(message.guild.me).manage_roles: # If the bot can manage permissions for channel, then overrwrite.
                         await channel.set_permissions(muted_role, overwrite=overwrite)

@@ -10,8 +10,18 @@ def hasRole(member, role):
     print(currentRole)
     return currentRole != None
 
-async def displayHelpDirectory(channel):
-    await channel.send("You triggered the help command.")
+async def display_help(ctx, database):
+    cursor = database.cursor()
+    print("Hello.?")
+    cursor.execute("SELECT help_msg FROM Guilds WHERE guild_id = " +  str(ctx.guild.id))
+    result = cursor.fetchall()
+    msg = result[0][0]
+    embed = discord.Embed()
+    embed.title = 'Server Message'
+    embed.description = msg
+    embed.color = 13951737
+
+    await ctx.channel.send(embed=embed)
 
 async def assignRole(client, message):
     # Needs to add a role to the user.
