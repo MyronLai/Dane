@@ -3,12 +3,13 @@ from commands import *
 from discord.ext import commands
 import courses
 import random
-
+from database.database import *
 
 class TextCommands(commands.Cog):
 
     def __init__(self, client):
         self.client = client
+        self.database = load_db('./config/config.json')
     
     @commands.command()
     async def help(self, ctx):
@@ -72,8 +73,33 @@ class TextCommands(commands.Cog):
             print("Member not found")
 
     @commands.command()
-    async def mute(self, ctx, user_id):
+    async def mute(self, ctx, user_id, mute_reason):
         message = ctx.message
+        member_to_mute = discord.utils.get(ctx.guild.members, id=int(user_id))
+        cursor = self.database.cursor()
+        cursor.execute("SELECT mute_role FROM Guilds where guild_id = " + str(message.guild.id))
+        result = cursor.fetchall()
+        mute_role_id = result[0][0]
+        if mute_role_id == 0:
+            muted_role = await message.guild.create_role(name='Muted by Dane')
+            all_channels = message.guild.channels
+            overwrite = discord.PermissionOverwrite()
+            overwrite.send_messages=False
+            overwrite.read_messages=True
+            for channel in all_channels:
+                if channel.permissions_for(message.guild.me).manage_roles: # If the bot can manage permissions for channel, then overrwrite.
+                    await channel.set_permissions(muted_role, overwrite=overwrite)
+
+            cursor.execute('UPDATE Guilds SET mute_role = ' + str(muted_role.id) + ' WHERE guild_id = ' + str(message.guild.id))
+            self.database.commit()
+            await member_to_mute.add_roles(muted_role.id, reason=mute_reason)
+        else:
+            role = discord.utils.get(message.guild.roles, id=mute_role_id)
+            if role is not None:
+                print(role)
+                await member_to_mute.add_roles(role, reason="User was spamming.")
+            
+
 
 def setup(bot):
     bot.add_cog(TextCommands(bot))
