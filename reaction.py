@@ -8,7 +8,7 @@ class ReactionBot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        print('????')
+        print('Reaction')
         if payload.message_id == 533900036917166090:
             print(payload.emoji.name)
             # Find a role corresponding to the Emoji name.
@@ -35,6 +35,7 @@ class ReactionBot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
+        print("Removign Reaction")
         if payload.message_id == 533900036917166090:
             print(payload.emoji.name)
 

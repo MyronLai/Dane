@@ -2,9 +2,11 @@ import json
 import discord
 from discord.ext import commands 
 import reaction
+from database.database import *
 
 client = commands.Bot(command_prefix='?', help_command=None)
-reactionBot = reaction.ReactionBot(client)
+client.database = load_db('./config/config.json')
+
 with open('config/config.json') as f: # LOAD JSON FILE
     data = json.load(f) # LOAD JSON INTO data
 

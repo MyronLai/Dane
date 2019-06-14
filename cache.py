@@ -9,7 +9,8 @@ class Cache(threading.Thread):
         self._courseCache = {}
         self.callback = self.clearCache
         self.event = threading.Event()
-        self.time = 60
+        self.time = 1800
+        print("The current time of initialization is: " + str(datetime.datetime.now()))
         super(Cache, self).__init__()
     
     def run(self):

@@ -68,7 +68,6 @@ class DaneBotEvents(commands.Cog):
             embed = discord.Embed(color=4303348)
             embed.set_author(name=self.client.user.name, icon_url=member.avatar_url)
             embed.set_footer(text="User joined")
-            # Add user to Great Dane Role. 
         except Exception as err:
             print(err)
 
@@ -134,6 +133,7 @@ class DaneBotEvents(commands.Cog):
             if muted_role is not None:
                 print("Role exists.")
                 all_channels = message.guild.channels
+                await message.author.add_roles(muted_role, reason="User was spamming.")
             else:
                 muted_role = await message.guild.create_role(name='Muted by Dane') # Create the role...
                 all_channels = message.guild.channels
