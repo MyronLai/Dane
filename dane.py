@@ -3,11 +3,12 @@ import discord
 from discord.ext import commands 
 import reaction
 from database.database import *
+CONFIG_FILE = './config/config.json'
 
 client = commands.Bot(command_prefix='?', help_command=None)
-client.database = load_db('./config/config.json')
+client.database = load_db(CONFIG_FILE)
 
-with open('config/config.json') as f: # LOAD JSON FILE
+with open(CONFIG_FILE) as f: # LOAD JSON FILE
     data = json.load(f) # LOAD JSON INTO data
 
 CLIENT_TOKEN = data['token'] # STORE CLIENT TOKEN from JSON.

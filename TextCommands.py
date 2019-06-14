@@ -9,8 +9,8 @@ class TextCommands(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-        self.database = load_db('./config/config.json')
-    
+        self.database = self.client.database
+        print(self.database)
     @commands.command()
     async def help(self, ctx):
         await display_help(ctx, self.database)
