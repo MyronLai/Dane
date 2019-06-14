@@ -10,7 +10,7 @@ class TextCommands(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.database = self.client.database
-        print(self.database)
+        
     @commands.command()
     async def help(self, ctx):
         await display_help(ctx, self.database)
@@ -35,14 +35,6 @@ class TextCommands(commands.Cog):
     @commands.command()
     async def ban(self, ctx, user_id, reason):
         await assignUserBan(ctx, user_id, reason)
-    
-    '''
-    Command: Prune
-    mass delete messages using TextChannel.purge() function, must ensure that the command is issued by an Administrator, and that the user id provided is not of an Admin on the server.
-    '''
-    @commands.command()
-    async def prune(self, ctx, user_id):
-        await pruneMessages(ctx.message, int(user_id))
     
     @commands.command()
     async def kick(self, ctx, user_id, reason):

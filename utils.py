@@ -246,9 +246,9 @@ async def queryCourse(client, message):
         await message.channel.send(embed=embed)
 
 # THIS IS AN ADMIN FUNCTION 
-async def pruneMessages(message, user_id):
+async def prune_messages(message, user_id):
     # Check if the user who issued the command has permission.
-    isAdmin = message.author.permissions_in(message.channel).administrator
+    '''isAdmin = message.author.permissions_in(message.channel).administrator
     owner = message.guild.owner
     channel = message.channel
 
@@ -256,6 +256,8 @@ async def pruneMessages(message, user_id):
         print("Cannot purge messages in a priority channel.")
         return
     # If the user is an Admin, then we can proceed to prune the messages.
+
+    
     if isAdmin:
         print('User is an admin. Deleting...')
         # Check if the messages to be deleted were sent by an Admin.
@@ -271,12 +273,11 @@ async def pruneMessages(message, user_id):
                 print('You cannot delete messages of another Admin')
             else:
                 print("Deleting..")
-                await channel.purge(limit=50, check=(lambda m : int(m.author.id) == user_id))
-
-
-    else:
-        print('User is not an admin, not deleting.')
-        
+                await channel.purge(limit=50, check=(lambda m : int(m.author.id) == user_id))'''
+    owner_id = message.guild.owner_id
+    if message.author.id == owner_id:
+        await message.channel.purge(limit=50, check=(lambda m: int(m.author.id == user_id)))
+    
 '''
 Admins cannot ban other admins
 '''
