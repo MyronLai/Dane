@@ -17,12 +17,11 @@ def hasRole(member, role):
 
 async def display_help(ctx, database):
     cursor = database.cursor()
-    print("Hello.?")
     cursor.execute("SELECT help_msg FROM Guilds WHERE guild_id = " +  str(ctx.guild.id))
     result = cursor.fetchall()
     msg = result[0][0]
     embed = discord.Embed()
-    embed.title = 'Server Message'
+    embed.title = 'Help Directory & Information'
     embed.description = msg
     embed.color = 13951737
 
@@ -245,9 +244,21 @@ async def queryCourse(client, message):
         embed.color=9633965
         await message.channel.send(embed=embed)
 
-# THIS IS AN ADMIN FUNCTION 
-async def prune_messages(message, user_id):
+'''
+    Prunes a given number of messages in a channel. This is an Admin function and should be used carefully.
+
+    args:
+        message (Message): The message object
+        user_id (int): The id of the user's messages to delete
+        prune_all (boolean) : Whether to prune all messages or only by user id.
+    
+    returns:
+        boolean: True if successful, False otherwise.
+'''
+async def prune_messages(message, user_id=-1, prune_all=True):
     # Check if the user who issued the command has permission.
+    print("Hello")
+    print(user_id)
     '''isAdmin = message.author.permissions_in(message.channel).administrator
     owner = message.guild.owner
     channel = message.channel
@@ -274,10 +285,21 @@ async def prune_messages(message, user_id):
             else:
                 print("Deleting..")
                 await channel.purge(limit=50, check=(lambda m : int(m.author.id) == user_id))'''
-    owner_id = message.guild.owner_id
-    if message.author.id == owner_id:
-        await message.channel.purge(limit=50, check=(lambda m: int(m.author.id == user_id)))
-    
+    def is_owner(): # Return true if the person using the command is owner.
+        return message.author.id == message.guild.owner_id
+
+    if prune_all: # Prune all messages should only be available to owner.
+        print("Pruning ALL messages, regardless of who the author is.")
+        if is_owner():
+            await message.channel.purge(limit=50)
+            # Should add a check to prevent Admins from deleting Owner Messages.
+
+    else:
+        print("Pruning " + str(user_id))
+        owner_id = message.guild.owner_id
+        if message.author.id == owner_id:
+            await message.channel.purge(limit=50, check=(lambda m: int(m.author.id == user_id)))
+
 '''
 Admins cannot ban other admins
 '''
