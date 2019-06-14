@@ -15,7 +15,7 @@ class DaneBotEvents(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.database = self.client.database
-        print(self.database)
+        
     @commands.Cog.listener()
     async def on_ready(self):
         print('Logged in as ' + self.client.user.name + '#' + self.client.user.discriminator)

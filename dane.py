@@ -1,8 +1,9 @@
 import json
 import discord
 from discord.ext import commands 
-import reaction
 from database.database import *
+import os
+
 CONFIG_FILE = './config/config.json'
 
 client = commands.Bot(command_prefix='?', help_command=None)
@@ -13,7 +14,7 @@ with open(CONFIG_FILE) as f: # LOAD JSON FILE
 
 CLIENT_TOKEN = data['token'] # STORE CLIENT TOKEN from JSON.
 
-extensions = ['reaction', 'TextCommands', 'Events']
+extensions = ['cogs.reaction', 'cogs.TextCommands', 'cogs.Events',  'cogs.AdminTextCommands']
 
 if __name__ == '__main__':
     for extension in extensions:
