@@ -2,17 +2,18 @@ CREATE DATABASE DaneBotSchema;
 
 CREATE TABLE Guilds (
     guild_id BIGINT NOT NULL PRIMARY KEY,
-    cmd_prefix VARCHAR(1) NOT NULL DEFAULT '!',
-    role_on_join BIGINT NOT NULL DEFAULT 0,
-    mute_role  BIGINT NOT NULL DEFAULT 0
-)
+    guild_owner BIGINT NOT NULL,
+    guild_name VARCHAR(128) NOT NULL,
+    total_members INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL
+);
 
 CREATE TABLE Users (
     client_id BIGINT NOT NULL,
     guild_id BIGINT NOT NULL,
     joinDate DATE NOT NULL,
     PRIMARY KEY (client_id, guild_id)
-)
+);
 
 CREATE TABLE UserLevelData (
     client_id BIGINT NOT NULL,
@@ -20,15 +21,16 @@ CREATE TABLE UserLevelData (
     client_xp INT NOT NULL DEFAULT 0,
     client_level INT NOT NULL DEFAULT 1,
     PRIMARY KEY (client_id, guild_id)
-)
+);
 
 CREATE TABLE GuildConfigurables(
-    guild_id BIGINT NOT NULL PRIMARY KEY,
+    guild_id BIGINT NOT NULL,
     auto_role BIGINT NOT NULL DEFAULT 0,
     mute_role BIGINT NOT NULL DEFAULT 0,
-    bot_log_channel BIGINT NOT NULL DEFAULT 0
-)
-
+    bot_log_channel BIGINT NOT NULL DEFAULT 0,
+    FOREIGN KEY (guild_id) REFERENCES Guilds(guild_id)
+);
+-- create a virtual column that is the sum of bans and kicks
 CREATE TABLE GuildMemberInfractions(
     guild_id BIGINT NOT NULL,
     client_id BIGINT NOT NULL,
