@@ -82,21 +82,45 @@ class AdminTextCommands(commands.Cog):
             
         else:
             print("Not an admin.")
+    '''
+        command: unmute
 
+        args:
+            user_id (int): The id of the user to unmute
+    '''
     @commands.command()
     async def unmute(self, ctx, user_id):
         message = ctx.message
-        member_to_unmute = discord.utils.get(message.guild.members, id=int(user_id))
-        if member_to_unmute is not None:
-            print("Trying to unmute " + member_to_unmute.name)
-            muted_role = discord.utils.get(message.guild.roles, name='Muted by Dane')
-            if muted_role is not None:
-                await member_to_unmute.remove_roles(muted_role, reason="Unmuted by admin.")
-            else:
-                print("Muted by Dane role was not found.")
-        else:
-            print("Member not found")
+        user = discord.utils.find(lambda user: user.id==int(user_id), ctx.guild.members)
+        embed = discord.Embed()
+        if user is not None:
+            # Find the role muted role
+            cursor = self.database.cursor()
+            cursor.execute("SELECT mute_role FROM Guilds WHERE guild_id = " + str(ctx.guild.id))
+            result = cursor.fetchall()[0][0]
 
+            if result is None or result == 0:
+                embed.title='Error : Mute role is not set!'
+                embed.description='Please set the mute role. ?setmuterole <role_id>'
+                await message.channel.send(embed=embed)
+            else:
+                mute_role = discord.utils.get(ctx.guild.roles, id=int(result))
+                if mute_role is not None:
+                    await user.remove_roles(mute_role)
+                    embed.title='Server Action'
+                    embed.description=user.mention + ' (' + str(user_id) + ') was unmuted!'
+                    await message.channel.send(embed=embed)
+                else:
+                    print("Mute role not found")
+        else:
+            embed.title='Error : User was not found'
+            embed.description='The user with id ' + str(user_id) + ' was not found'
+            await message.channel.send(embed=embed)
+    '''
+        command: mute
+
+        args: 
+    '''
     @commands.command()
     async def mute(self, ctx, user_id, mute_reason):
         message = ctx.message
@@ -128,8 +152,8 @@ class AdminTextCommands(commands.Cog):
             await message.channel.send(embed=embed)
 
     '''
-    Command: Ban
-    admin command to ban users
+        Command: Ban
+            admin command to ban users
     '''
     @commands.command()
     async def ban(self, ctx, user_id, reason):
