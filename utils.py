@@ -300,26 +300,6 @@ async def prune_messages(message, user_id=-1, prune_all=True):
         if message.author.id == owner_id:
             await message.channel.purge(limit=50, check=(lambda m: int(m.author.id == user_id)))
 
-'''
-Admins cannot ban other admins
-'''
-async def assignUserBan(context, user_id, reason):
-    message = context.message
-    isAdmin = message.channel.permissions_for(message.author).administrator
-
-    channel = context.channel
-
-    userToBan = discord.utils.get(context.guild.members, id=int(user_id))
-    if userToBan is not None:
-        # Check if user is an Administrator
-        print(userToBan.name)
-        isUserToBanAnAdmin = channel.permissions_for(userToBan).administrator
-        print(isUserToBanAnAdmin)
-        if isUserToBanAnAdmin:
-            print("Cannot ban another admin.")
-        else:
-            await context.guild.ban(userToBan, delete_message_days=1, reason=reason)
-
 async def kickUser(ctx, user_id, reason):
     admin = isAdmin(ctx, ctx.message.author.id)
     

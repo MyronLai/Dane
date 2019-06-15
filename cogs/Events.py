@@ -128,7 +128,7 @@ class DaneBotEvents(commands.Cog):
             print(message.author.name + ' is sending messages too fast!')
             #cursor = self.database.cursor()
             #cursor.execute("SELECT mute_role FROM Guilds where guild_id = " + str(message.guild.id))
-
+            
             muted_role = discord.utils.find(lambda role: role.name == 'Muted by Dane', message.guild.roles)
             if muted_role is not None:
                 print("Role exists.")
