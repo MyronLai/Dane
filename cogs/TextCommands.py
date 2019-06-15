@@ -28,7 +28,6 @@ class TextCommands(commands.Cog):
     async def course(self, ctx):
         await queryCourse(ctx, ctx.message)
 
-    
     @commands.command()
     async def dice(self, ctx):
         message = ctx.message

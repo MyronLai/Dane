@@ -18,10 +18,27 @@ class AdminTextCommands(commands.Cog):
                 await prune_messages(ctx.message, int(args[0]), flag)
         elif len(args) == 0:
             await prune_messages(ctx.message)
+    '''
+    Command: setmuterole
+        allows the server admin to change the role to give to users when they should not be allowed to send messages. 
 
+        NOTE: Admins are responsible for ensuring permissions are set for each channel. This gives admins the flexibility to decide which channels a user should be able to send messages in, and which channels they can only read messages.
+    '''
     @commands.command()
-    async def setmuterole():
-        pass
+    async def setmuterole(self, ctx, role_id):
+        message = ctx.message
+        muted_role = discord.utils.find(lambda role: role.id==int(role_id), ctx.guild.roles)
+        if muted_role is not None:
+            cursor = self.database.cursor()
+            cursor.execute("UPDATE Guilds SET mute_role = " + str(role_id) + " WHERE guild_id = " + str(ctx.guild.id))
+            self.database.commit()
+            embed=discord.Embed()
+            embed.title = 'Sucess'
+            embed.description= 'You set the mute role to '+ muted_role.mention + '. Users who are muted will be given this role. Please make sure to manually override any channel permissions.'
+            await message.channel.send(embed=embed)
+        else:
+            await message.channel.send("The role with id " + str(role_id) + " was not found! Please try again.")
+
 
     @commands.command()
     async def sethelpcmd(self, ctx):
@@ -85,15 +102,25 @@ class AdminTextCommands(commands.Cog):
         message = ctx.message
         member_to_mute = discord.utils.get(ctx.guild.members, id=int(user_id))
         mute_role = discord.utils.find(lambda role: role.name=='Muted by Dane', ctx.guild.roles)
-
-        try:
-            if mute_role is not None:
-                print("Muting user.")
-                await member_to_mute.add_roles(mute_role, reason="Muted by admin")
+        cursor = self.database.cursor()
+        cursor.execute("SELECT mute_role FROM Guilds WHERE guild_id = " + str(ctx.guild.id))
+        result = cursor.fetchall()[0][0]
+        embed = discord.Embed()
+        if result is None or result == 0:
+            print("No")
+            embed.title='No Mute Role Set'
+            embed.description='Please set a mute role. ?setmuterole <role_id>'
+            await message.channel.send(embed=embed)
+        else:
+            # Mute role is set Check to see if the role is valid
+            role = discord.utils.get(ctx.guild.roles, id=int(result))
+            if role is not None:
+                await member_to_mute.add_roles(role, reason=mute_reason)
             else:
-                print("Role does not exist.")
-        except Exception as err:
-            print(err)
+                embed.title='Role was not found!'
+                embed.description='The mute role set was not found. Please modify this by setting a new existing role'
+                await message.channel.send(embed=embed)
+
 
     '''
     Command: Ban
