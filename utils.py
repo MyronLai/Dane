@@ -3,6 +3,7 @@ import discord
 import courses
 import re
 from cache import Cache
+from database.keywords import SQLKeywords
 
 cache = Cache()
 cache.start()
@@ -317,3 +318,24 @@ def isAdmin(ctx, user_id):
         return ctx.message.channel.permissions_for(user).administrator
     else:
         return False
+'''
+def get_sql_statement(key, *args):
+
+    if key == SQLKeywords.SELECT:
+        columns=args[0]
+        table=args[1]
+        values=args[2]
+        col_str =  ' '.join(columns)
+        return SQLKeywords.SELECT.value + ' ' + col_str + ' FROM ' + table.value
+    elif key == SQLKeywords.INSERT:
+        
+        pass
+    elif key == SQLKeywords.CREATE:
+        pass
+    elif key == SQLKeywords.DELETE:
+        pass
+    elif key == SQLKeywords.ALTER_COLUMN:
+        pass
+    elif key == SQLKeywords.ALTER_TABLE:
+        pass
+        '''
