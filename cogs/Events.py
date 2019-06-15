@@ -3,7 +3,6 @@ from discord.ext import commands
 import time
 import datetime 
 import random
-from database.database import load_db
 import threading
 import asyncio
 
@@ -100,25 +99,7 @@ class DaneBotEvents(commands.Cog):
         embed.set_author(name=authorName, icon_url=user.avatar_url)
         embed.set_footer(text="User Unbanned")
         await member_log_channel.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_guild_join(self, guild):
-        print(guild.id)
-        cursor = self.database.cursor()
-        cursor.execute("INSERT INTO Guilds VALUES(" + str(guild.id) + ", DEFAULT, DEFAULT, DEFAULT)")
-        self.database.commit()
-        print("Done.")
-        # Every Guild needs a mod-logs channel, mute role
-
-        dane_logs_channel = discord.utils.get(guild.channels, name='dane-logs')
-        if dane_logs_channel is not None:
-            embed = discord.Embed()
-            embed.title = 'Dane Bot Joined ' + guild.name
-            embed.description = 'Dane Bot automatically looks for the channel dane-logs and keeps all mod and error messages in there.'
-            await dane_logs_channel.send(embed=embed)
-        else:
-            # Create Dane Log Channel.
-            pass
+        
     @commands.Cog.listener()
     async def on_message(self, message):
         global count
