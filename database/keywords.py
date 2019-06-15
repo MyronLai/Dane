@@ -13,3 +13,6 @@ class SQLKeywords(Enum):
 class SQLTables(Enum):
     GUILDS = 'Guilds'
     USERS = 'Users'
+    CONFIGURABLES = 'GuildConfigurables'
+    INFRACTIONS = 'GuildMemberInfractions'
+    LEVELS = 'UserLevelData'

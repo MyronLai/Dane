@@ -8,7 +8,7 @@ CONFIG_FILE = './config/config.json'
 
 client = commands.Bot(command_prefix='?', help_command=None)
 client.database = load_db(CONFIG_FILE)
-
+client.database.autocommit=True
 
 with open(CONFIG_FILE) as f: # LOAD JSON FILE
     data = json.load(f) # LOAD JSON INTO data
