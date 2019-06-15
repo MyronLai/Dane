@@ -1,11 +1,13 @@
 import discord
 from discord.ext import commands
 from utils import *
+from database.keywords import *
+
 class AdminTextCommands(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.database = self.client.database
-
+        
     '''
     Command: Prune
     mass delete messages using TextChannel.purge() function, must ensure that the command is issued by an Administrator, and that the user id provided is not of an Admin on the server.
@@ -28,14 +30,21 @@ class AdminTextCommands(commands.Cog):
     async def setmuterole(self, ctx, role_id):
         message = ctx.message
         muted_role = discord.utils.find(lambda role: role.id==int(role_id), ctx.guild.roles)
+        
         if muted_role is not None:
             cursor = self.database.cursor()
-            cursor.execute("UPDATE Guilds SET mute_role = " + str(role_id) + " WHERE guild_id = " + str(ctx.guild.id))
-            self.database.commit()
-            embed=discord.Embed()
-            embed.title = 'Sucess'
-            embed.description= 'You set the mute role to '+ muted_role.mention + '. Users who are muted will be given this role. Please make sure to manually override any channel permissions.'
-            await message.channel.send(embed=embed)
+            try:
+                cursor.execute("UPDATE " + SQLTables.CONFIGURABLES.value + " SET mute_role = " + str(muted_role.id) + " WHERE guild_id = " + str(ctx.guild.id))
+                self.database.commit()
+                cursor.close()
+            except Exception as error:
+                print(error)
+            finally:
+                cursor.close()
+                embed=discord.Embed()
+                embed.title = 'Sucess'
+                embed.description= 'You set the mute role to '+ muted_role.mention + '. Users who are muted will be given this role. Please make sure to manually override any channel permissions.'
+                await message.channel.send(embed=embed)
         else:
             await message.channel.send("The role with id " + str(role_id) + " was not found! Please try again.")
 
@@ -68,6 +77,7 @@ class AdminTextCommands(commands.Cog):
                     print(query)
                     cursor.execute(query)
                     self.database.commit()
+                    cursor.close()
                     embed.title='Server Message'
                     embed.description='Success!'
                     embed.color=10747835
@@ -79,9 +89,7 @@ class AdminTextCommands(commands.Cog):
                     await message.channel.send(embed=embed)
             except asyncio.TimeoutError:
                 await message.channel.send("Took too long!")
-            
-        else:
-            print("Not an admin.")
+        
     '''
         command: unmute
 
@@ -127,21 +135,25 @@ class AdminTextCommands(commands.Cog):
         member_to_mute = discord.utils.get(ctx.guild.members, id=int(user_id))
         embed = discord.Embed()
         if member_to_mute is not None:
-            mute_role = discord.utils.find(lambda role: role.name=='Muted by Dane', ctx.guild.roles)
             
             cursor = self.database.cursor()
             cursor.execute("SELECT mute_role FROM Guilds WHERE guild_id = " + str(ctx.guild.id))
             result = cursor.fetchall()[0][0]
+            print(result)
             if result is None or result == 0:
                 print("No")
                 embed.title='No Mute Role Set'
                 embed.description='Please set a mute role. ?setmuterole <role_id>'
                 await message.channel.send(embed=embed)
             else:
+                print("Role found")
                 # Mute role is set Check to see if the role is valid
                 role = discord.utils.get(ctx.guild.roles, id=int(result))
                 if role is not None:
                     await member_to_mute.add_roles(role, reason=mute_reason)
+                    embed.title='Success'
+                    embed.description=member_to_mute.mention + ' was muted.'
+                    await message.channel.send(embed=embed)
                 else:
                     embed.title='Role was not found!'
                     embed.description='The mute role set was not found. Please modify this by setting a new existing role'
@@ -153,11 +165,37 @@ class AdminTextCommands(commands.Cog):
 
     '''
         Command: Ban
-            admin command to ban users
+            Bans a GuildMember from the Guild
+
+            args:
+            user_id (int) : - The id of the Guild Member to ban
+            reason (string) : - Reason of the ban3
     '''
     @commands.command()
     async def ban(self, ctx, user_id, reason):
-        await assignUserBan(ctx, user_id, reason)
+        try:
+            if ctx.channel.permissions_for(ctx.author).ban_members:
+                user = discord.utils.get(ctx.guild.members, id=int(user_id))
+                if user is not None:
+                    if ctx.author.id == ctx.guild.owner_id: # If the command was triggered by the Owner
+                        await ctx.guild.ban(user, delete_message_days=1, reason=reason)
+                    elif ctx.channel.permissions_for(user).ban_members:
+                        print("Bot cannot ban another mod/user with ban_members permissions")
+                    else:
+                        await ctx.guild.ban(user, delete_message_days=1, reason=reason)
+                else:
+                    print("User not found.")
+            else:
+                raise Exception('Non-Admin trying to issue a ban')
+        except Exception as error:
+            print(error)
+    
+    @commands.command()
+    async def unban(self, ctx, user_id):
+        banned_users = await ctx.guild.bans()
+        user = discord.utils.find(lambda ban: ban.user.id==int(user_id), banned_users).user
+        await ctx.guild.unban(user)
+        print("Unbanned")
     
     @commands.command()
     async def kick(self, ctx, user_id, reason):
