@@ -5,6 +5,7 @@ import datetime
 import random
 import threading
 import asyncio
+import json
 
 bucket = commands.CooldownMapping.from_cooldown(5, 3, commands.BucketType.member)
 
@@ -28,7 +29,8 @@ class DaneBotEvents(commands.Cog):
     
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
-        role = discord.utils.find(lambda role: role.name=='Subscribe', member.guild.roles)
+        MEMBER_NAME = member.name
+        '''role = discord.utils.find(lambda role: role.name=='Subscribe', member.guild.roles)
         embed=discord.Embed()
 
         if role is not None:
@@ -39,8 +41,28 @@ class DaneBotEvents(commands.Cog):
                         print("Don't send to the person who joined")
                     else:
                         await current_member.send(embed=embed)
-                        print("Sending")
-                    
+                        print("Sending")'''
+        if before.channel is None and after.channel is not None:
+            cursor = self.database.cursor()
+            cursor.execute("SELECT users_subscribed FROM ChannelSubscriptions WHERE channel_id = " + str(after.channel.id))
+            result = cursor.fetchall()
+
+            
+            users=result[0][0]
+            user_ids = json.loads(users)
+            print(user_ids)
+            members_array = []
+            for current_id in user_ids:
+                member = discord.utils.find(lambda m: m.id==int(current_id), member.guild.members)
+                if member is not None:
+                    members_array.append(member)
+            
+           
+            for current_member in members_array:
+                embed=discord.Embed()
+                embed.title=MEMBER_NAME + ' joined ' + after.channel.name
+                await current_member.send(embed=embed)
+                print("Sending")
             #if before.channel.name == after.channel.name:
                 #print("User did not change channels")
 
