@@ -38,7 +38,26 @@ class TextCommands(commands.Cog):
         msg = await self.client.wait_for('message', check=check)
         await message.channel.send('You rolled a ' +str(random.randint(1, 6)))
 
-    
+    @commands.command()
+    async def subscribe(self, ctx):
+        role = discord.utils.find(lambda role: role.name=='Subscribe', ctx.guild.roles)
+        #voice = discord.utils.find(lambda channel: channel.id==int(voice_channel_id), ctx.guild.channels)
+
+        #if voice is not None:
+        embed=discord.Embed()
+        if role is not None:
+            await ctx.author.add_roles(role)
+            embed.description='Subscribed!'
+            await ctx.channel.send(embed=embed)
+        else:
+            embed.description='Role does not exist'
+            await ctx.channel.send(embed=embed)
+        '''else:
+            embed.title='Error'
+            embed.description='The role with id ' + int(voice_channel_id) + ' does not exist!'
+            await ctx.channel.send(embed=embed)'''
+
+
 
 
 def setup(bot):

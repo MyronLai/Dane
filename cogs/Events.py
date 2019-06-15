@@ -8,8 +8,6 @@ import asyncio
 
 bucket = commands.CooldownMapping.from_cooldown(5, 3, commands.BucketType.member)
 
-count = 0
-
 class DaneBotEvents(commands.Cog):
     def __init__(self, client):
         self.client = client
@@ -28,6 +26,24 @@ class DaneBotEvents(commands.Cog):
         embed.description = str(error)
         await ctx.channel.send(embed=embed)
     
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        role = discord.utils.find(lambda role: role.name=='Subscribe', member.guild.roles)
+        embed=discord.Embed()
+
+        if role is not None:
+            if before.channel is None and after.channel is not None:
+                embed.title=member.name + ' joined ' + after.channel.name
+                for current_member in role.members:
+                    if member.id == current_member.id:
+                        print("Don't send to the person who joined")
+                    else:
+                        await current_member.send(embed=embed)
+                        print("Sending")
+                    
+            #if before.channel.name == after.channel.name:
+                #print("User did not change channels")
+
     @commands.Cog.listener()
     async def on_message_delete(self, message): # Print out a summary of the message deleted
 
@@ -99,7 +115,7 @@ class DaneBotEvents(commands.Cog):
         embed.set_author(name=authorName, icon_url=user.avatar_url)
         embed.set_footer(text="User Unbanned")
         await member_log_channel.send(embed=embed)
-        
+
     @commands.Cog.listener()
     async def on_message(self, message):
         global count
