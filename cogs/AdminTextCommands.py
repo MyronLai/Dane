@@ -101,26 +101,31 @@ class AdminTextCommands(commands.Cog):
     async def mute(self, ctx, user_id, mute_reason):
         message = ctx.message
         member_to_mute = discord.utils.get(ctx.guild.members, id=int(user_id))
-        mute_role = discord.utils.find(lambda role: role.name=='Muted by Dane', ctx.guild.roles)
-        cursor = self.database.cursor()
-        cursor.execute("SELECT mute_role FROM Guilds WHERE guild_id = " + str(ctx.guild.id))
-        result = cursor.fetchall()[0][0]
         embed = discord.Embed()
-        if result is None or result == 0:
-            print("No")
-            embed.title='No Mute Role Set'
-            embed.description='Please set a mute role. ?setmuterole <role_id>'
-            await message.channel.send(embed=embed)
-        else:
-            # Mute role is set Check to see if the role is valid
-            role = discord.utils.get(ctx.guild.roles, id=int(result))
-            if role is not None:
-                await member_to_mute.add_roles(role, reason=mute_reason)
-            else:
-                embed.title='Role was not found!'
-                embed.description='The mute role set was not found. Please modify this by setting a new existing role'
+        if member_to_mute is not None:
+            mute_role = discord.utils.find(lambda role: role.name=='Muted by Dane', ctx.guild.roles)
+            
+            cursor = self.database.cursor()
+            cursor.execute("SELECT mute_role FROM Guilds WHERE guild_id = " + str(ctx.guild.id))
+            result = cursor.fetchall()[0][0]
+            if result is None or result == 0:
+                print("No")
+                embed.title='No Mute Role Set'
+                embed.description='Please set a mute role. ?setmuterole <role_id>'
                 await message.channel.send(embed=embed)
-
+            else:
+                # Mute role is set Check to see if the role is valid
+                role = discord.utils.get(ctx.guild.roles, id=int(result))
+                if role is not None:
+                    await member_to_mute.add_roles(role, reason=mute_reason)
+                else:
+                    embed.title='Role was not found!'
+                    embed.description='The mute role set was not found. Please modify this by setting a new existing role'
+                    await message.channel.send(embed=embed)
+        else:
+            embed.title='Error. Member not found'
+            embed.description='Member with id ' + str(user_id) + ' was not found. Please try again'
+            await message.channel.send(embed=embed)
 
     '''
     Command: Ban
