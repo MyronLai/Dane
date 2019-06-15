@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 import datetime
+from database.keywords import SQLKeywords, SQLTables
+
 
 class GuildUpdateEvents(commands.Cog):
     def __init__(self, client):
@@ -9,21 +11,33 @@ class GuildUpdateEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
-        print(guild.id)
+
         cursor = self.database.cursor()
-        cursor.execute("INSERT INTO Guilds VALUES(" + str(guild.id) + ", DEFAULT, DEFAULT, DEFAULT)")
-        self.database.commit()
-        print("Done.")
-        # Every Guild needs a mod-logs channel, mute role
-        dane_logs_channel = discord.utils.get(guild.channels, name='dane-logs')
-        if dane_logs_channel is not None:
-            embed = discord.Embed()
-            embed.title = 'Dane Bot Joined ' + guild.name
-            embed.description = 'Dane Bot automatically looks for the channel dane-logs and keeps all mod and error messages in there.'
-            await dane_logs_channel.send(embed=embed)
-        else:
-            # Create Dane Log Channel.
-            pass
+        date = str(guild.created_at)
+        values = (str(guild.id), str(guild.owner_id), guild.name, len(guild.members), date)\
+            
+        try:    
+            query = "INSERT INTO " + SQLTables.GUILDS.value + " VALUES "  + str(values)
+            cursor.execute(query)
+            query = SQLKeywords.INSERT.value + " " + SQLTables.CONFIGURABLES.value + " (guild_id) VALUES ("  + str(guild.id) + ")"
+            cursor.execute(query)
+        except Exception as error:
+            print(error)
+        finally:
+            cursor.close()
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild):
+        
+        cursor=self.database.cursor()
+        try:
+            query="DELETE FROM GuildConfigurables WHERE guild_id=" +str(guild.id)
+            cursor.execute(query)
+            query="DELETE FROM Guilds WHERE guild_id="+str(guild.id)
+            cursor.execute(query)
+        except Exception as error:
+            print(error)
+        finally:
+            cursor.close()
 
 def setup(bot):
     bot.add_cog(GuildUpdateEvents(bot))
