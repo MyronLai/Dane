@@ -15,13 +15,29 @@ class TextCommands(commands.Cog):
         await display_help(ctx, self.database)
 
     @commands.command()
-    async def assign(self, ctx):
-        await assignRole(self.client, ctx.message)
+    async def me(self, ctx, *, arg):
+        '''
+            Get a List of "Assignable" roles, i.e: Non-Admin, Non-Mod, Non-Permission roles.
+            Iterate through the Guild Roles, check if it has Permissions.
+            We need to make sure the Role does not have these permissions:
+                - Administrator
+                - Manage Server
+                - Manage Roles
+                - Manage Channels
+                - Kick Members
+                - Ban Members
+                - Manage Nicknames
+                - Manage Emojis
+                - Manage Webhooks
+        '''
+        #await assignRole(self.client, ctx.message)
 
+        await validate_roles(ctx, arg)
     ''' Remove a role from a user '''
     @commands.command()
     async def remove(self, ctx):
-        await removeRole(self.client, ctx.message)
+        pass
+        #await removeRole(self.client, ctx.message)
 
     @commands.command()
     async def course(self, ctx):
@@ -36,8 +52,6 @@ class TextCommands(commands.Cog):
         
         msg = await self.client.wait_for('message', check=check)
         await message.channel.send('You rolled a ' +str(random.randint(1, 6)))
-    
-    
     
 def setup(bot):
     bot.add_cog(TextCommands(bot))

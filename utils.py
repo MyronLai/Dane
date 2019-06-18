@@ -258,34 +258,6 @@ async def queryCourse(client, message):
 '''
 async def prune_messages(message, user_id=-1, prune_all=True):
     # Check if the user who issued the command has permission.
-    print("Hello")
-    print(user_id)
-    '''isAdmin = message.author.permissions_in(message.channel).administrator
-    owner = message.guild.owner
-    channel = message.channel
-
-    if channel.name in PRIORITY_CHANNELS:
-        print("Cannot purge messages in a priority channel.")
-        return
-    # If the user is an Admin, then we can proceed to prune the messages.
-
-    
-    if isAdmin:
-        print('User is an admin. Deleting...')
-        # Check if the messages to be deleted were sent by an Admin.
-        user = discord.utils.find(lambda u : u.id == user_id, message.guild.members) # Get the author of the messages to purge
-        if user is not None: 
-            guild_perms = message.channel.permissions_for(user).administrator
-
-            if owner.id == user_id or user_id == message.author.id:
-                print("Owner is deleting another admin's messages.")
-                await channel.purge(limit=50, check=(lambda m : int(m.author.id) == user_id))
-            
-            elif guild_perms: # If messages were by another Admin. Don't delete. We will make it so the owner can delete any Admin's messages.
-                print('You cannot delete messages of another Admin')
-            else:
-                print("Deleting..")
-                await channel.purge(limit=50, check=(lambda m : int(m.author.id) == user_id))'''
     def is_owner(): # Return true if the person using the command is owner.
         return message.author.id == message.guild.owner_id
 
@@ -320,9 +292,9 @@ def isAdmin(ctx, user_id):
         return False
 
 '''
-    
+
 '''
-def validate_roles(ctx, roles):
+async def validate_roles(ctx, roles):
     roles = re.sub(',\s+', ',', roles) # Replace all occurences of a comma and any number of whitespace with just a comma.
     roles = roles.split(",")
     valid_roles = []
@@ -331,9 +303,8 @@ def validate_roles(ctx, roles):
         if valid_role is not None:
             perms = valid_role.permissions
             if perms.kick_members or perms.ban_members or perms.administrator or perms.manage_channels or perms.manage_guild or perms.manage_messages:
-                print("INVALID ROLE")
                 pass
             else:
                 valid_roles.append(valid_role)
-
-    print(valid_roles)
+    
+    await ctx.author.add_roles(*valid_roles) # Unpack the list and pass it to add_roles.
