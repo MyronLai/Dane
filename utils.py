@@ -318,24 +318,22 @@ def isAdmin(ctx, user_id):
         return ctx.message.channel.permissions_for(user).administrator
     else:
         return False
-'''
-def get_sql_statement(key, *args):
 
-    if key == SQLKeywords.SELECT:
-        columns=args[0]
-        table=args[1]
-        values=args[2]
-        col_str =  ' '.join(columns)
-        return SQLKeywords.SELECT.value + ' ' + col_str + ' FROM ' + table.value
-    elif key == SQLKeywords.INSERT:
-        
-        pass
-    elif key == SQLKeywords.CREATE:
-        pass
-    elif key == SQLKeywords.DELETE:
-        pass
-    elif key == SQLKeywords.ALTER_COLUMN:
-        pass
-    elif key == SQLKeywords.ALTER_TABLE:
-        pass
-        '''
+'''
+    
+'''
+def validate_roles(ctx, roles):
+    roles = re.sub(',\s+', ',', roles) # Replace all occurences of a comma and any number of whitespace with just a comma.
+    roles = roles.split(",")
+    valid_roles = []
+    for role in roles:
+        valid_role = discord.utils.find(lambda r: r.name.lower() == role.lower(), ctx.guild.roles)
+        if valid_role is not None:
+            perms = valid_role.permissions
+            if perms.kick_members or perms.ban_members or perms.administrator or perms.manage_channels or perms.manage_guild or perms.manage_messages:
+                print("INVALID ROLE")
+                pass
+            else:
+                valid_roles.append(valid_role)
+
+    print(valid_roles)
