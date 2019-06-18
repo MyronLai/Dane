@@ -30,25 +30,26 @@ class AdminTextCommands(commands.Cog):
     async def setmuterole(self, ctx, role_id):
         message = ctx.message
         muted_role = discord.utils.find(lambda role: role.id==int(role_id), ctx.guild.roles)
-        
+        cursor = self.database.cursor()
         if muted_role is not None:
-            cursor = self.database.cursor()
             try:
-                cursor.execute("UPDATE " + SQLTables.CONFIGURABLES.value + " SET mute_role = " + str(muted_role.id) + " WHERE guild_id = " + str(ctx.guild.id))
-                self.database.commit()
-                cursor.close()
+                cursor.execute("SELECT mute_role FROM GuildConfigurables WHERE guild_id=" + str(ctx.guild.id))
+                result = cursor.fetchall()
+                if len(result) == 0: # If Guild is not in GuildConfigurables for some reason, give  them defaults.
+                    cursor.execute("INSERT INTO GuildConfigurables VALUES({}, DEFAULT, {}, DEFAULT, DEFAULT)".format(str(ctx.guild.id), str(muted_role.id)))
+                else:
+                    cursor.execute("UPDATE " + SQLTables.CONFIGURABLES.value + " SET mute_role = " + str(muted_role.id) + " WHERE guild_id = " + str(ctx.guild.id))
             except Exception as error:
                 print(error)
             finally:
                 cursor.close()
                 embed=discord.Embed()
                 embed.title = 'Sucess'
-                embed.description= 'You set the mute role to '+ muted_role.mention + '. Users who are muted will be given this role. Please make sure to manually override any channel permissions.'
+                embed.description='You set the mute role to '+ muted_role.mention + '. Users who are muted will be given this role. Please make sure to manually override any channel permissions.'
                 await message.channel.send(embed=embed)
         else:
             await message.channel.send("The role with id " + str(role_id) + " was not found! Please try again.")
-
-
+        
     @commands.command()
     async def sethelpcmd(self, ctx):
         if ctx.channel.permissions_for(ctx.author).administrator:
@@ -104,7 +105,7 @@ class AdminTextCommands(commands.Cog):
         if user is not None:
             # Find the role muted role
             cursor = self.database.cursor()
-            cursor.execute("SELECT mute_role FROM Guilds WHERE guild_id = " + str(ctx.guild.id))
+            cursor.execute("SELECT mute_role FROM {} WHERE guild_id={}".format(SQLTables.CONFIGURABLES.value, str(ctx.guild.id)))
             result = cursor.fetchall()[0][0]
 
             if result is None or result == 0:
@@ -137,7 +138,7 @@ class AdminTextCommands(commands.Cog):
         if member_to_mute is not None:
             
             cursor = self.database.cursor()
-            cursor.execute("SELECT mute_role FROM Guilds WHERE guild_id = " + str(ctx.guild.id))
+            cursor.execute("SELECT mute_role FROM {} WHERE guild_id = {}".format(SQLTables.CONFIGURABLES.value, str(ctx.guild.id)))
             result = cursor.fetchall()[0][0]
             print(result)
             if result is None or result == 0:
