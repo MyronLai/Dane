@@ -15,7 +15,7 @@ with open(CONFIG_FILE) as f: # LOAD JSON FILE
 
 CLIENT_TOKEN = data['token'] # STORE CLIENT TOKEN from JSON.
 
-extensions = ['cogs.reaction', 'cogs.TextCommands', 'cogs.Events',  'cogs.AdminTextCommands', 'cogs.guild']
+extensions = ['cogs.reaction', 'cogs.TextCommands', 'cogs.Events',  'cogs.AdminTextCommands', 'cogs.guild', 'cogs.SubscriptionCommands']
 
 if __name__ == '__main__':
     for extension in extensions:
