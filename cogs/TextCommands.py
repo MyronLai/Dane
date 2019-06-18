@@ -39,73 +39,33 @@ class TextCommands(commands.Cog):
         await message.channel.send('You rolled a ' +str(random.randint(1, 6)))
 
     @commands.command()
-    async def subscribe(self, ctx, *args):
+    async def subscribe(self, ctx, channel_type, *args):
         if len(args) == 0:
-            print("No params.")
-            return
-        else:
-            role = discord.utils.find(lambda role: role.name=='Subscribe', ctx.guild.roles)
-            args = ''.join(args)
-            voice_channel_ids = args.split(",")
-            user_id = ctx.author.id
-            cursor = self.database.cursor()
-
-            for voice_id in voice_channel_ids:
-                print("voice id  = " + str(voice_id))
-                jsonArray = "'[\"" + str(ctx.author.id) + "\"]'"
-                cursor.execute("SELECT channel_id, users_subscribed FROM ChannelSubscriptions WHERE channel_id = " + str(voice_id))
-                result = cursor.fetchall()
-                print(result)
-                if len(result) == 0:
-                    print('hello')
-                    cursor.execute("INSERT INTO ChannelSubscriptions VALUES(" + str(voice_id) + ", " + jsonArray + ")")
-                else:
-                    print("the channel exists. append user")
-                    users_str = json.loads(result[0][1])
-                    print(users_str)
-                    if str(ctx.author.id) in users_str:
-                        print("User is already subscribed!")
-                    else:
-                        users_str.append(str(ctx.author.id))
-                        print(users_str)
-
-                    users_str = json.dumps(users_str)
-                    print("DATA: " + str(users_str))
-                    cursor.execute("UPDATE ChannelSubscriptions SET users_subscribed = '" + str(users_str) + "'")
-                    
-                    print('done?')
-
-            ''' voice_channels = []
-            for channel_id in voice_channel_ids:
-                channel = discord.utils.find(lambda c: c.id==int(channel_id), ctx.guild.channels)
-                voice_channels.append(str(channel.id))
-                print("Added " + str(channel.name))
-            
-            cursor = self.database.cursor()
-            cursor.execute("SELECT channels FROM Subscriptions WHERE client_id=" + str(ctx.author.id) + " AND guild_id="+str(ctx.guild.id))
-            result = cursor.fetchall()
-            print(result)
-
-            if len(result) == 0:
-                channels = ','.join(voice_channels)
-                print(channels)
-                cursor.execute("INSERT INTO Subscriptions VALUES(" + str(ctx.guild.id) + "," + str(ctx.author.id) + ",'" + str(channels) + "')")
-                print("Done")
-            else:
-                pass
             embed=discord.Embed()
-            if role is not None:
-                await ctx.author.add_roles(role)
-                embed.description='Subscribed!'
+            if channel_type.lower() == 'voice':
+                embed.title='List of all Voice Channels and their IDs'
+                embed.color=5904098
+                description=''
+                embed.set_footer(text='Enter the ID of the voice channel you wish to subscribe to.', icon_url='https://cdn2.iconfinder.com/data/icons/metro-uinvert-dock/256/Microphone_1.png')
+                voice_channels=ctx.guild.voice_channels
+                for channel in voice_channels:
+                    description += "**Channel:** " + channel.name +  " **ID:** " + "__" + str(channel.id) + "__\n"
+                embed.description=description
+                embed.set_author(name=self.client.user.name, icon_url=self.client.user.avatar_url)
                 await ctx.channel.send(embed=embed)
-            else:
-                embed.description='Role does not exist'
-                await ctx.channel.send(embed=embed)
-            else:
-                embed.title='Error'
-                embed.description='The role with id ' + int(voice_channel_id) + ' does not exist!'
-                await ctx.channel.send(embed=embed)'''
+                
+                def check(msg):
+                    try:
+                        return msg.author.id == ctx.author.id and discord.utils.get(voice_channels, id=int(msg.content)) is not None
+                    except Exception as error:
+                        print(error)
 
+                user_response = await self.client.wait_for('message', check=check)
+                print(user_response.content)
+            elif channel_type.lower() == 'text':
+                pass
+        else:
+            pass
 
 
 
