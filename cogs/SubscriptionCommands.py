@@ -61,10 +61,16 @@ class SubscriptionCommands(commands.Cog):
                     return False
             valid_channel_ids = list(filter(filter_ids, args))
             try:
-                voice_channels=map(lambda c : c.name, voice_channels)
+                #voice_channels = map(lambda c : c.name, voice_channels)
+                voice_channels  = [] # This is a list of all the valid voice channels the user was trying to subscribe to.
+                for id in valid_channel_ids:
+                    channel = discord.utils.get(ctx.guild.voice_channels, id=int(id))
+                    if channel is not None:
+                        voice_channels.append(channel)
+
                 desc='\n'
-                for name in voice_channels:
-                    desc += name + "\n"
+                for voice in voice_channels:
+                    desc += "**{}** : **{}**\n".format(voice.name, voice.id)
                 await subscribe_user(valid_channel_ids, ctx, self.client.database)
                 embed.set_author(name="{}#{}".format(ctx.author.name, ctx.author.discriminator), icon_url=ctx.author.avatar_url)
                 embed.description="{} was subscribed to:\n{}".format(ctx.author.mention, desc)
@@ -77,8 +83,8 @@ class SubscriptionCommands(commands.Cog):
     @commands.command()
     async def unsubscribe(self, ctx, channel_id):
         voice_channels=map(lambda channel: channel.id, ctx.guild.voice_channels)
-        print(ctx.message.content)
-        if int(ctx.message.content) in voice_channels:
-            pass
+        if int(channel_id) in voice_channels: # If id passed in by user is a valid voice channel...
+            await unsubscribe_user(channel_id, ctx, self.client.database)
+
 def setup(bot):
     bot.add_cog(SubscriptionCommands(bot))
