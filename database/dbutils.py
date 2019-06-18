@@ -29,3 +29,13 @@ async def get_subscribed_channels(user_id, database):
     cursor.execute("SELECT channel_id FROM VoiceChannelSubscriptions WHERE client_id=" + str(user_id))
     result = cursor.fetchall()
     return result if len(result) != 0 else None
+
+async def unsubscribe_user(channel_id, ctx, database):
+    cursor = database.cursor()
+    if type(channel_id) != list:
+        try:
+            cursor.execute("INSERT INTO VoiceChannelSubscriptions VALUES({},{},{},{}) ON DUPLICATE KEY UPDATE isSubscribed=0".format(str(channel_id), str(ctx.guild.id), str(ctx.author.id), 0))
+        except Exception as error:
+            print(error)
+    else:
+        pass
