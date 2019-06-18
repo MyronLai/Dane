@@ -20,6 +20,12 @@ async def subscribe_user(channel_id, ctx, database):
                     cursor.execute("INSERT INTO VoiceChannelSubscriptions VALUES({}, {}, {}, {})".format(id, ctx.guild.id, ctx.author.id, 1))
         except Exception as error:
             print(error)
-            
+
     cursor.close()
 
+''' Returns all channnels the user is subscribed to as a tuple'''
+async def get_subscribed_channels(user_id, database):
+    cursor = database.cursor()
+    cursor.execute("SELECT channel_id FROM VoiceChannelSubscriptions WHERE client_id=" + str(user_id))
+    result = cursor.fetchall()
+    return result if len(result) != 0 else None
