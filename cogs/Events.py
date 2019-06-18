@@ -29,42 +29,24 @@ class DaneBotEvents(commands.Cog):
     
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
-        MEMBER_NAME = member.name
-        '''role = discord.utils.find(lambda role: role.name=='Subscribe', member.guild.roles)
-        embed=discord.Embed()
 
-        if role is not None:
-            if before.channel is None and after.channel is not None:
-                embed.title=member.name + ' joined ' + after.channel.name
-                for current_member in role.members:
-                    if member.id == current_member.id:
-                        print("Don't send to the person who joined")
-                    else:
-                        await current_member.send(embed=embed)
-                        print("Sending")'''
-        if before.channel is None and after.channel is not None:
+        if before.channel is None and after.channel is not None: # User joins a Voice Channel while not being in one.
             cursor = self.database.cursor()
-            cursor.execute("SELECT users_subscribed FROM ChannelSubscriptions WHERE channel_id = " + str(after.channel.id))
+            cursor.execute("SELECT client_id FROM VoiceChannelSubscriptions WHERE channel_id={} AND isSubscribed={}".format(str(after.channel.id), 1))
             result = cursor.fetchall()
-
-            
-            users=result[0][0]
-            user_ids = json.loads(users)
-            print(user_ids)
-            members_array = []
-            for current_id in user_ids:
-                member = discord.utils.find(lambda m: m.id==int(current_id), member.guild.members)
-                if member is not None:
-                    members_array.append(member)
-            
-           
-            for current_member in members_array:
-                embed=discord.Embed()
-                embed.title=MEMBER_NAME + ' joined ' + after.channel.name
-                await current_member.send(embed=embed)
-                print("Sending")
-            #if before.channel.name == after.channel.name:
-                #print("User did not change channels")
+            embed=discord.Embed()
+            for id in result: # Loop through each id in the result set.
+                current_member = discord.utils.find(lambda m: m.id==int(id[0]), member.guild.members) # Check if the  Member exists in Guild.
+                if current_member is not None and current_member.id != member.id: # If member is not none, and also not the  person who joined.
+                    embed.set_author(name=member.name,icon_url=member.avatar_url)
+                    embed.description="{} joined {}".format(member.name, after.channel.name)
+                    embed.set_footer(text=str(datetime.datetime.now().strftime("%A - %B %d at %I:%M:%S %p")))
+                    await current_member.send(embed=embed)
+                    
+        elif before.channel is not None and after.channel is not None:
+            print("User Switched.")
+        elif before.channel is not None and after.channel is None:
+            print("user left")
 
     @commands.Cog.listener()
     async def on_message_delete(self, message): # Print out a summary of the message deleted
@@ -140,7 +122,6 @@ class DaneBotEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        global count
         if message.author.bot:
             return
         if bucket.update_rate_limit(message):
@@ -209,7 +190,6 @@ class DaneBotEvents(commands.Cog):
                         if currentLevel != 4:
                             currentLevel = 4
                             flag = True
-                    
                     else:
                         pass
                     # Update User XP and Level
