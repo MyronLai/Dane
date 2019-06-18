@@ -40,8 +40,8 @@ class TextCommands(commands.Cog):
     @commands.command()
     async def subscribe(self, ctx, channel_type, *args):
         voice_channels=ctx.guild.voice_channels
+        embed=discord.Embed()
         if len(args) == 0:
-            embed=discord.Embed()
             if channel_type.lower() == 'voice':
                 embed.title='List of all Voice Channels and their IDs'
                 embed.color=5904098
@@ -66,16 +66,25 @@ class TextCommands(commands.Cog):
             elif channel_type.lower() == 'text':
                 pass
         else: # This case is for Users that call the command with specified voice channel ids
-            print(args)
             def filter_ids(iter): # Filter function to filter out all invalid Voice Channel Ids
                 if discord.utils.find(lambda channel:channel.id==int(iter), voice_channels) is not None:
                     return True
                 else:
                     return False
-            filtered = filter(filter_ids, args)
-            for id in filtered:
-                print(id)
-
+            valid_channel_ids = list(filter(filter_ids, args))
+            try:
+                voice_channels=map(lambda c : c.name, voice_channels)
+                desc='\n'
+                for name in voice_channels:
+                    desc += name + "\n"
+                await subscribe_user(valid_channel_ids, ctx, self.client.database)
+                embed.set_author(name="{}#{}".format(ctx.author.name, ctx.author.discriminator), icon_url=ctx.author.avatar_url)
+                embed.description="{} was subscribed to:\n{}".format(ctx.author.mention, desc)
+                embed.set_footer(text='To unsubscribe, use ?unsubscribe <channel_id>')
+                embed.color=2342399
+                await ctx.channel.send(embed=embed)
+            except Exception as error:
+                print(error)
 
 
 def setup(bot):
