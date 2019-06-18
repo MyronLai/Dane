@@ -3,8 +3,7 @@ from utils import *
 from discord.ext import commands
 import courses
 import random
-from database.database import *
-
+from database.dbutils import *
 class TextCommands(commands.Cog):
 
     def __init__(self, client):
@@ -40,6 +39,7 @@ class TextCommands(commands.Cog):
 
     @commands.command()
     async def subscribe(self, ctx, channel_type, *args):
+        voice_channels=ctx.guild.voice_channels
         if len(args) == 0:
             embed=discord.Embed()
             if channel_type.lower() == 'voice':
@@ -47,7 +47,6 @@ class TextCommands(commands.Cog):
                 embed.color=5904098
                 description=''
                 embed.set_footer(text='Enter the ID of the voice channel you wish to subscribe to.', icon_url='https://cdn2.iconfinder.com/data/icons/metro-uinvert-dock/256/Microphone_1.png')
-                voice_channels=ctx.guild.voice_channels
                 for channel in voice_channels:
                     description += "**Channel:** " + channel.name +  " **ID:** " + "__" + str(channel.id) + "__\n"
                 embed.description=description
@@ -60,12 +59,22 @@ class TextCommands(commands.Cog):
                     except Exception as error:
                         print(error)
 
-                user_response = await self.client.wait_for('message', check=check)
-                print(user_response.content)
+                response = await self.client.wait_for('message', check=check)
+                # Now subscribe the user to the database.
+                await subscribe_user(response.content, ctx, self.database)
+                
             elif channel_type.lower() == 'text':
                 pass
-        else:
-            pass
+        else: # This case is for Users that call the command with specified voice channel ids
+            print(args)
+            def filter_ids(iter): # Filter function to filter out all invalid Voice Channel Ids
+                if discord.utils.find(lambda channel:channel.id==int(iter), voice_channels) is not None:
+                    return True
+                else:
+                    return False
+            filtered = filter(filter_ids, args)
+            for id in filtered:
+                print(id)
 
 
 
