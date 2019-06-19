@@ -28,73 +28,32 @@ async def display_help(ctx, database):
 
     await ctx.channel.send(embed=embed)
 
-async def assignRole(client, message):
-    # Needs to add a role to the user.
-    roles = message.guild.roles
-    args = re.sub("^(\?assign( )*)", "", message.content)
-    args = re.split(" *, *", args)
-    print(args)
-    if len(args) == 1 and len(args[0]) == 0:
-        embed = discord.Embed()
-        embed.title = 'Too few arguments'
-        embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
-        embed.description = "?assign <role1, role2, ...>"
-        embed.color = 4366836
-        await message.channel.send(embed=embed)
-        return
-    # Need to check array length, for each role in the array, we will loop and check if the role exists.
+async def remove_roles(ctx, roles):
+    roles = re.sub(',\s+', ',', roles) # Replace all occurences of a comma and any number of whitespace with just a comma.
+    roles = roles.split(",")
+    print(roles)
+    roles_list = []
+    for role_name in roles:
+        role = discord.utils.find(lambda r : r.name.lower() == role_name.lower(), ctx.guild.roles)
+        roles_list.append(role) if role is not None else None
 
-    counter = 0 # Counter to start at zero.
+    await ctx.author.remove_roles(*roles_list)
 
-    rolesSuccess = []
-    rolesFailure = []
-
-    for currRole in args:
-        ROLE_TO_ASSIGN = discord.utils.find(lambda r: r.name.lower() == args[counter].lower(), roles)
-        # Need to check if the user has the role, if they do, we shouldn't need to add them.
-
-        if ROLE_TO_ASSIGN == None:
-            embed = discord.Embed()
-            embed.title = 'Error'
-            embed.description = 'Role not found.'
-            embed.color = 16711680
-            rolesFailure.append(args[counter])
-            await message.channel.send(embed = embed)
-
-        if hasRole(message.author, args[counter]):
-            embed = discord.Embed()
-            embed.title = 'Error'
-            embed.description = 'User already assigned to role.'
-            embed.color = 16711680
-            rolesFailure.append(args[counter])
-            await message.channel.send(embed = embed)
-
-        else:
-            await message.author.add_roles(ROLE_TO_ASSIGN)
-            embed = discord.Embed()
-            embed.title = 'Success'
-            embed.description = 'Added to role'
-            embed.color = 65280
-            rolesSuccess.append(args[counter])
-            await message.channel.send(embed = embed)
-
-        counter += 1
-    # End of For Loop.
-
-async def removeRole(client, message):
-    roles = message.guild.roles
-    args = message.content.split()
-    args.pop(0)
-    counter = 0
-
-    for currRole in args:
-        ROLE_TO_REMOVE = discord.utils.find(lambda r : r.name.lower() == args[counter].lower(), roles)
-
-        if hasRole(message.author, args[counter]):
-            await message.author.remove_roles(ROLE_TO_REMOVE)
-            print("Removed.")
-
-        counter += 1
+async def add_roles(ctx, roles):
+    roles = re.sub(',\s+', ',', roles) # Replace all occurences of a comma and any number of whitespace with just a comma.
+    roles = roles.split(",")
+    valid_roles = []
+    for role in roles:
+        valid_role = discord.utils.find(lambda r: r.name.lower() == role.lower(), ctx.guild.roles)
+        if valid_role is not None:
+            perms = valid_role.permissions
+            if perms.kick_members or perms.ban_members or perms.administrator or perms.manage_channels or perms.manage_guild or perms.manage_messages:
+                print("Cannot add user to " + valid_role.name)
+                pass
+            else:
+                valid_roles.append(valid_role)
+    
+    await ctx.author.add_roles(*valid_roles) # Unpack the list and pass it to add_roles.
 
 async def build_embeds(message, course_results, args, cache_key):
     if len(course_results['courses']) != 0:
@@ -290,21 +249,3 @@ def isAdmin(ctx, user_id):
         return ctx.message.channel.permissions_for(user).administrator
     else:
         return False
-
-'''
-
-'''
-async def validate_roles(ctx, roles):
-    roles = re.sub(',\s+', ',', roles) # Replace all occurences of a comma and any number of whitespace with just a comma.
-    roles = roles.split(",")
-    valid_roles = []
-    for role in roles:
-        valid_role = discord.utils.find(lambda r: r.name.lower() == role.lower(), ctx.guild.roles)
-        if valid_role is not None:
-            perms = valid_role.permissions
-            if perms.kick_members or perms.ban_members or perms.administrator or perms.manage_channels or perms.manage_guild or perms.manage_messages:
-                pass
-            else:
-                valid_roles.append(valid_role)
-    
-    await ctx.author.add_roles(*valid_roles) # Unpack the list and pass it to add_roles.
