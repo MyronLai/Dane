@@ -74,7 +74,7 @@ class AdminTextCommands(commands.Cog):
                 try:
                     print(description_msg)
                     cursor = self.database.cursor()
-                    query = "UPDATE Guilds SET help_msg=\""+description_msg+"\" WHERE guild_id="+(str(ctx.guild.id))
+                    query = "UPDATE GuildConfigurables SET help_msg=\""+description_msg+"\" WHERE guild_id="+(str(ctx.guild.id))
                     print(query)
                     cursor.execute(query)
                     self.database.commit()

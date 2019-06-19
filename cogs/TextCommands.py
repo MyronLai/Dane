@@ -13,8 +13,25 @@ class TextCommands(commands.Cog):
         
     @commands.command()
     async def help(self, ctx):
-        await display_help(ctx, self.database)
-    
+        embed=discord.Embed()
+        cursor = self.database.cursor()
+        cursor.execute("SELECT help_msg FROM GuildConfigurables WHERE guild_id=" + str(ctx.guild.id))
+        result = cursor.fetchall()
+        if len(result) == 0:
+            print("Guild does not exist. Add them with defaults.")
+            cursor.execute("INSERT INTO GuildConfigurables (guild_id) VALUES ({})".format(str(ctx.guild.id)))
+        else:
+            if result[0][0] is None:
+                embed.set_author(name=self.client.user.name, icon_url=self.client.user.avatar_url)
+                embed.description='No help message set!'
+                embed.set_footer(text='Please set a help message: ?sethelp')
+                await ctx.channel.send(embed=embed)
+            else:
+                embed.title='Information For {}'.format(ctx.guild.name)
+                embed.set_author(name=self.client.user.name, icon_url=self.client.user.avatar_url)
+                embed.description=result[0][0]
+                embed.set_footer(text=ctx.guild.name)
+                await ctx.channel.send(embed=embed)
     '''
         Get a List of "Assignable" roles, i.e: Non-Admin, Non-Mod, Non-Permission roles.
         Iterate through the Guild Roles, check if it has Permissions.
@@ -40,6 +57,7 @@ class TextCommands(commands.Cog):
 
     @commands.command()
     async def course(self, ctx):
+        print("hello?")
         await queryCourse(ctx, ctx.message)
 
     @commands.command()
