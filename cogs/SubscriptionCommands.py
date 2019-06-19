@@ -95,25 +95,33 @@ class SubscriptionCommands(commands.Cog):
             print(error)
 
     @commands.command()
-    async def wl(self, ctx, channel_id, *args):
+    async def wl(self, ctx, *args): # Args should only contain the channel id.
+        cursor = self.database.cursor()
         embed=discord.Embed()
         if len(args) != 0:
-            cursor = self.database.cursor()
-            mentions = ctx.message.mentions
-            for member in mentions:
-                if member.id != ctx.author.id:
-                    cursor.execute("SELECT * FROM VoiceChannelWhitelist WHERE client_id={} AND channel_id={} AND whitelisted_user={}".format(str(ctx.author.id),str(channel_id), str(member.id)))
-                    result = cursor.fetchall()
-                    if len(result) == 0:# Insert record
-                        cursor.execute("INSERT INTO VoiceChannelWhitelist VALUES ({}, {}, {}, {}, {})".format(str(channel_id), str(ctx.guild.id), str(ctx.author.id), str(member.id), 1))
-                        print('done')
-                    else: # Record Exists. Set the field isWhitelisted to 1
-                        cursor.execute("UPDATE VoiceChannelWhitelist SET isWhitelisted=1 WHERE client_id={} AND channel_id={} AND whitelisted_user={}".format(str(ctx.author.id),str(channel_id), str(member.id)))
-                        print("Updated.")
-                else:
-                    print("Cannot whitelist self!")
+            channel = discord.utils.find(lambda c : c.id==int(args[0]), ctx.guild.voice_channels)# Check if Channel is not None
+            if channel is not None:
+                for member in ctx.message.mentions:
+                    if member.id != ctx.author.id:
+                        cursor.execute("SELECT * FROM VoiceChannelWhitelist WHERE client_id={} AND channel_id={} AND whitelisted_user={}".format(str(ctx.author.id),str(channel.id), str(member.id)))
+                        result = cursor.fetchall()
+                        if len(result) == 0:# Insert record
+                            cursor.execute("INSERT INTO VoiceChannelWhitelist VALUES ({}, {}, {}, {}, {})".format(str(channel.id), str(ctx.guild.id), str(ctx.author.id), str(member.id), 1))
+                            print('done')
+                        else: # Record Exists. Set the field isWhitelisted to 1
+                            cursor.execute("UPDATE VoiceChannelWhitelist SET isWhitelisted=1 WHERE client_id={} AND channel_id={} AND whitelisted_user={}".format(str(ctx.author.id),str(channel.id), str(member.id)))
+                            print("Updated.")
+                    else:
+                        print("Cannot whitelist self!")
+                # Send an embed message telling users who they waitlisted successfully.
+            else:
+                embed.description="Channel was not found"
+                await ctx.channel.send(embed=embed)
         else:
-            embed.title='No Users Provided'
+            embed.title="{}'s whitelist"
+            cursor.execute("SELECT whitelisted_user, channel_id WHERE guild_id={} AND isWhitelisted=1".format(str(ctx.guild.id)))
+            result=cursor.fetchall()
+            embed.description=str(result)
             await ctx.channel.send(embed=embed)
 
     '''
@@ -130,7 +138,13 @@ class SubscriptionCommands(commands.Cog):
             await ctx.channel.send(embed=embed)
         else:
             print("Channel not found")
-
     
+    @commands.command()
+    async def unsuball(self, ctx):
+        pass
+
+    @commands.command()
+    async def suball(self, ctx):
+        pass
 def setup(bot):
     bot.add_cog(SubscriptionCommands(bot))
