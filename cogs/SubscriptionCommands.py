@@ -116,8 +116,21 @@ class SubscriptionCommands(commands.Cog):
             embed.title='No Users Provided'
             await ctx.channel.send(embed=embed)
 
+    '''
+        Clears the user's whitelist for a given channel. Internally on the server it will set all of their records for 'isSubscribed' to 0.
+    '''
     @commands.command()
     async def clearwl(self, ctx, channel_id):
-        pass
+        channel = discord.utils.find(lambda c: c.id==int(channel_id), ctx.guild.channels)
+        if channel is not None:
+            cursor = self.database.cursor()
+            cursor.execute("UPDATE VoiceChannelWhitelist SET isSubscribed=0 WHERE client_id={} AND channel_id={} AND guild_id={}".format(str(ctx.author.id), str(channel.id), str(ctx.guild.id)))
+            embed=discord.Embed()
+            embed.description="Cleared {]'s whitelist for {}".format(ctx.author.mention, channel.name)
+            await ctx.channel.send(embed=embed)
+        else:
+            print("Channel not found")
+
+    
 def setup(bot):
     bot.add_cog(SubscriptionCommands(bot))
