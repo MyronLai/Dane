@@ -174,29 +174,24 @@ class AdminTextCommands(commands.Cog):
     '''
     @commands.command()
     async def ban(self, ctx, user_id, reason):
-        try:
-            if ctx.channel.permissions_for(ctx.author).ban_members:
-                user = discord.utils.get(ctx.guild.members, id=int(user_id))
-                if user is not None:
-                    if ctx.author.id == ctx.guild.owner_id: # If the command was triggered by the Owner
-                        await ctx.guild.ban(user, delete_message_days=1, reason=reason)
-                    elif ctx.channel.permissions_for(user).ban_members:
-                        print("Bot cannot ban another mod/user with ban_members permissions")
-                    else:
-                        await ctx.guild.ban(user, delete_message_days=1, reason=reason)
-                else:
-                    print("User not found.")
+        user = discord.utils.get(ctx.guild.members, id=int(user_id))
+        if ctx.channel.permissions_for(ctx.author).ban_members and user is not None:
+            if ctx.author.id == ctx.guild.owner_id: # If the command was triggered by the Owner
+                await ctx.guild.ban(user, delete_message_days=1, reason=reason)
+            elif ctx.channel.permissions_for(user).ban_members:
+                print("Bot cannot ban another mod/user with ban_members permissions")
             else:
-                raise Exception('Non-Admin trying to issue a ban')
-        except Exception as error:
-            print(error)
+                await ctx.guild.ban(user, delete_message_days=1, reason=reason)
+        else:
+            print('Non-Admin trying to issue a ban')
     
     @commands.command()
     async def unban(self, ctx, user_id):
-        banned_users = await ctx.guild.bans()
-        user = discord.utils.find(lambda ban: ban.user.id==int(user_id), banned_users).user
-        await ctx.guild.unban(user)
-        print("Unbanned")
+        if ctx.channel.permissions_for(ctx.author).ban_members:
+            banned_users = await ctx.guild.bans()
+            user = discord.utils.find(lambda ban: ban.user.id==int(user_id), banned_users).user
+            await ctx.guild.unban(user)
+            print("Unbanned")
     
     @commands.command()
     async def kick(self, ctx, user_id, reason):

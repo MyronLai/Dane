@@ -116,12 +116,20 @@ class DaneBotEvents(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_ban(self, guild, member):
-        member_log_channel = discord.utils.get(member.guild.channels, name='mod-logs')
-        authorName = member.name + "#" + member.discriminator + " <" + str(member.id) + ">"
-        embed = discord.Embed(color=16029762)
-        embed.set_author(name=authorName, icon_url=member.avatar_url)
-        embed.set_footer(text="User Banned")
-        await member_log_channel.send(embed=embed)
+        
+        cursor = self.database.cursor()
+        cursor.execute("SELECT mod_channel FROM GuildConfigurables WHERE guild_id={}".format(str(guild.id)))
+        result = cursor.fetchall()
+        if len(result) != 0:
+            channel = discord.utils.get(member.guild.channels, id=int(result[0][0]))
+            authorName = member.name + "#" + member.discriminator + " <" + str(member.id) + ">"
+            embed = discord.Embed(color=16029762)
+            embed.set_author(name=authorName, icon_url=member.avatar_url)
+            embed.set_footer(text="User Banned")
+            await channel.send(embed=embed)
+        else:
+            print("Needs to set a mod channel")
+        
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild, user):
