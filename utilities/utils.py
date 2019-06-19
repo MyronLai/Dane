@@ -233,15 +233,14 @@ async def prune_messages(message, user_id=-1, prune_all=True):
             await message.channel.purge(limit=50, check=(lambda m: int(m.author.id == user_id)))
 
 async def kickUser(ctx, user_id, reason):
-    admin = isAdmin(ctx, ctx.message.author.id)
-    
-    isUserToKickAnAdmin = isAdmin(ctx, user_id)
-    userToKick = discord.utils.get(ctx.guild.members, id=user_id)
-    if isUserToKickAnAdmin:
-        print('Cannot kick another admin with this command')
-    elif admin:
-        await ctx.guild.kick(userToKick, reason=reason)
-
+    user = discord.utils.find(lambda u: u.id==int(user_id), ctx.guild.members)
+    if ctx.channel.permissions_for(ctx.author).kick_members and user is not None: # Check if they have kick_members permissions
+        if ctx.channel.permissions_for(ctx.author).value > ctx.channel.permissions_for(user).value:
+            await user.kick(reason=reason)
+        else:
+            print('No permissions.')
+    else:
+        print("non admin/mod trying to use kick command")
 def isAdmin(ctx, user_id):
     # Find User 
     user = discord.utils.get(ctx.guild.members, id=int(user_id))

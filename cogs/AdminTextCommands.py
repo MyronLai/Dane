@@ -27,7 +27,7 @@ class AdminTextCommands(commands.Cog):
         NOTE: Admins are responsible for ensuring permissions are set for each channel. This gives admins the flexibility to decide which channels a user should be able to send messages in, and which channels they can only read messages.
     '''
     @commands.command()
-    async def setmuterole(self, ctx, role_id): # Messages should go in Mod-Logs.
+    async def setmute(self, ctx, role_id): # Messages should go in Mod-Logs.
         message = ctx.message
         muted_role = discord.utils.find(lambda role: role.id==int(role_id), ctx.guild.roles)
         cursor = self.database.cursor()
@@ -51,7 +51,7 @@ class AdminTextCommands(commands.Cog):
             await message.channel.send("The role with id " + str(role_id) + " was not found! Please try again.")
         
     @commands.command()
-    async def sethelpcmd(self, ctx): # Messages should go in Bot Logs
+    async def sethelp(self, ctx): # Messages should go in Bot Logs
         if ctx.channel.permissions_for(ctx.author).administrator:
             message = ctx.message
             await message.channel.send("Please enter your message. To separate lines, make sure to add a \\n.")
