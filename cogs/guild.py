@@ -27,7 +27,6 @@ class GuildUpdateEvents(commands.Cog):
             cursor.close()
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
-        
         cursor=self.database.cursor()
         try:
             query="DELETE FROM GuildConfigurables WHERE guild_id=" +str(guild.id)
@@ -38,6 +37,6 @@ class GuildUpdateEvents(commands.Cog):
             print(error)
         finally:
             cursor.close()
-
+    
 def setup(bot):
     bot.add_cog(GuildUpdateEvents(bot))

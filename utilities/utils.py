@@ -1,9 +1,9 @@
 import asyncio
-import discord
-import courses
+import discord.abc
 import re
-from cache import Cache
+from utilities.cache import Cache
 from database.keywords import SQLKeywords
+from utilities.courses import *
 
 cache = Cache()
 cache.start()

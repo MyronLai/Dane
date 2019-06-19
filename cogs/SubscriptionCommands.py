@@ -115,5 +115,9 @@ class SubscriptionCommands(commands.Cog):
         else:
             embed.title='No Users Provided'
             await ctx.channel.send(embed=embed)
+
+    @commands.command()
+    async def clearwl(self, ctx, channel_id):
+        pass
 def setup(bot):
     bot.add_cog(SubscriptionCommands(bot))

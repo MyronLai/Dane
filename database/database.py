@@ -16,3 +16,5 @@ def load_db(file):
     )
     return database
 
+async def subscribe_user(user_id):
+    print(user_id)

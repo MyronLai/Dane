@@ -1,3 +1,4 @@
+import discord
 
 async def subscribe_user(channel_id, ctx, database):
     cursor = database.cursor() # Need to query database and check if User Exists in the VoiceChannelSubscriptions Table
@@ -21,7 +22,6 @@ async def subscribe_user(channel_id, ctx, database):
                     cursor.execute("INSERT INTO VoiceChannelSubscriptions VALUES({}, {}, {}, {})".format(id, ctx.guild.id, ctx.author.id, 1))
                 else:
                     cursor.execute("UPDATE VoiceChannelSubscriptions SET isSubscribed=1 WHERE client_id=" + str(ctx.author.id) +  " AND channel_id=" + str(id))
-                    print("????")
         except Exception as error:
             print(error)
 
@@ -38,18 +38,18 @@ async def unsubscribe_user(channel_id, ctx, database):
     cursor = database.cursor()
     if type(channel_id) != list:
         try:
-           # cursor.execute("INSERT INTO VoiceChannelSubscriptions VALUES({},{},{},{}) ON DUPLICATE KEY UPDATE isSubscribed=0".format(str(channel_id), str(ctx.guild.id), str(ctx.author.id), 0))
             cursor.execute("SELECT isSubscribed FROM VoiceChannelSubscriptions WHERE channel_id=" + str(channel_id))
             result = cursor.fetchall()
             if len(result) != 0:
                 isSubscribed=result[0][0]
-                print(isSubscribed)
                 if isSubscribed==1:
                     cursor.execute("UPDATE VoiceChannelSubscriptions SET isSubscribed=0 WHERE client_id=" + str(ctx.author.id) + " AND channel_id=" +str(channel_id))
-                    print("Done")
-                else:
-                    print("?")
+                    channel = discord.utils.find(lambda c : c.id==int(channel_id), ctx.guild.voice_channels)
+                    embed=discord.Embed()
+                    embed.description=ctx.author.mention + ' has unsubscribed from ' + channel.name
+                    embed.color=13387520
+                    await ctx.channel.send(embed=embed)
         except Exception as error:
             print(error)
     else:
-        print("Not a list")
+        print("a list")

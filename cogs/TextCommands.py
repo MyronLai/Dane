@@ -1,9 +1,10 @@
 import discord
-from utils import *
 from discord.ext import commands
-import courses
 import random
 from database.dbutils import *
+from utilities.utils import *
+from utilities.courses import *
+
 class TextCommands(commands.Cog):
 
     def __init__(self, client):
@@ -13,31 +14,29 @@ class TextCommands(commands.Cog):
     @commands.command()
     async def help(self, ctx):
         await display_help(ctx, self.database)
-
+    
+    '''
+        Get a List of "Assignable" roles, i.e: Non-Admin, Non-Mod, Non-Permission roles.
+        Iterate through the Guild Roles, check if it has Permissions.
+        We need to make sure the Role does not have these permissions:
+            - Administrator
+            - Manage Server
+            - Manage Roles
+            - Manage Channels
+            - Kick Members
+            - Ban Members
+            - Manage Nicknames
+            - Manage Emojis
+            - Manage Webhooks
+    '''
     @commands.command()
     async def me(self, ctx, *, arg):
-        '''
-            Get a List of "Assignable" roles, i.e: Non-Admin, Non-Mod, Non-Permission roles.
-            Iterate through the Guild Roles, check if it has Permissions.
-            We need to make sure the Role does not have these permissions:
-                - Administrator
-                - Manage Server
-                - Manage Roles
-                - Manage Channels
-                - Kick Members
-                - Ban Members
-                - Manage Nicknames
-                - Manage Emojis
-                - Manage Webhooks
-        '''
-        #await assignRole(self.client, ctx.message)
-
-        await validate_roles(ctx, arg)
+        await add_roles(ctx, arg)
+    
     ''' Remove a role from a user '''
     @commands.command()
-    async def remove(self, ctx):
-        pass
-        #await removeRole(self.client, ctx.message)
+    async def notme(self, ctx, *, arg):
+        await remove_roles(ctx, arg)
 
     @commands.command()
     async def course(self, ctx):

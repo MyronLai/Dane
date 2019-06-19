@@ -40,18 +40,9 @@ CREATE TABLE GuildMemberInfractions(
     kicks INT NOT NULL DEFAULT 0,
     total INT AS (bans+kicks) VIRTUAL NOT NULL,
     PRIMARY KEY (guild_id, client_id)
-);
+);@
 
 CREATE TABLE VoiceChannelSubscriptions(
-    channel_id BIGINT NOT NULL,
-    guild_id BIGINT NOT NULL,
-    client_id BIGINT NOT NULL,
-    isSubscribed TINYINT(1) NOT NULL DEFAULT 0,
-    PRIMARY KEY (channel_id, client_id),
-    FOREIGN KEY (guild_id) REFERENCES Guilds (guild_id)
-);
-
-CREATE TABLE TextChannelSubscriptions(
     channel_id BIGINT NOT NULL,
     guild_id BIGINT NOT NULL,
     client_id BIGINT NOT NULL,
@@ -64,8 +55,8 @@ CREATE TABLE VoiceChannelWhitelist(
     channel_id BIGINT NOT NULL,
     guild_id BIGINT NOT NULL,
     client_id BIGINT NOT NULL,
-    blacklisted_user BIGINT NOT NULL,
+    whitelisted_user BIGINT NOT NULL,
     isWhitelisted TINYINT(1) NOT NULL DEFAULT 0,
-    PRIMARY KEY (channel_id, client_id, blacklisted_user),
+    PRIMARY KEY (channel_id, client_id, whitelisted_user),
     FOREIGN KEY (guild_id) REFERENCES Guilds (guild_id)
 );

@@ -22,11 +22,12 @@ class DaneBotEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        embed = discord.Embed()
-        embed.title = 'Error'
-        embed.description = str(error)
-        await ctx.channel.send(embed=embed)
+        print(error)
     
+    '''
+        - If a User does not have a whitelist, then they will receive  notifications for ALL members that join.
+        - If a User's whitelist contains at least one user, then we will only send notifications when that user joins.
+    '''
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         
@@ -38,18 +39,22 @@ class DaneBotEvents(commands.Cog):
             for id in result: # Loop through each id in the result set. Each ID represents the client subscribed.
                 current_member = discord.utils.find(lambda m: m.id==int(id[0]), member.guild.members) # Check if the  Member exists in Guild.
                 if current_member is not None and current_member.id != member.id: # If member is not none, and also not the  person who joined.
-                    # We need to get the CLIENT's whitelist.
+                    # We need to get the CLIENT's whitelist and check if the member who joined is in the whitelist.
                     cursor.execute("SELECT whitelisted_user FROM VoiceChannelWhitelist WHERE channel_id={} AND client_id={} AND isWhitelisted={} AND isWhitelisted=1".format(str(after.channel.id), str(current_member.id), 1)) # Select whitelisted_user column, if the MEMBER who joined is in the whitelist, then we send a message.
                     print("Whitelist for " + str(current_member) + " " + str(current_member.id))
                     result = cursor.fetchall()
-                    ids = map(lambda n : n[0], result)
-                    
-                    if member.id in ids:
-                        print("Send message." + member.name + " is in the whitelist.")
-                        embed=discord.Embed()
-                        embed.set_author(name=member.name,icon_url=member.avatar_url)
-                        embed.description="{} joined {}".format(member.name, after.channel.name)
-                        embed.set_footer(text=str(datetime.datetime.now().strftime("%A - %B %d at %I:%M:%S %p")))
+
+                    embed=discord.Embed()
+                    embed.set_author(name=member.name,icon_url=member.avatar_url)
+                    embed.description="{} joined {}".format(member.name, after.channel.name)
+                    embed.set_footer(text=str(datetime.datetime.now().strftime("%A - %B %d at %I:%M:%S %p")))
+
+                    if len(result) != 0: # If the user's whitelist is not empty
+                        ids = map(lambda n : n[0], result)
+                        if member.id in ids: # Check if the member id is in the whitelist.
+                            print("Send message." + member.name + " is in the whitelist.")
+                            await current_member.send(embed=embed)
+                    else: # If their whitelist is empty, send.
                         await current_member.send(embed=embed)
                     
         elif before.channel is not None and after.channel is not None:
@@ -70,7 +75,6 @@ class DaneBotEvents(commands.Cog):
         embed = discord.Embed(color=16007746)
 
         embed.title = "Message Deleted <" + str(id) +">"
-
         embed.add_field(name="Author", value=msgAuthor, inline=False)
         embed.add_field(name="Time", value=time, inline=False)
         embed.add_field(name="Message ID", value=id, inline=False)
