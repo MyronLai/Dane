@@ -90,7 +90,22 @@ class AdminTextCommands(commands.Cog):
                     await message.channel.send(embed=embed)
             except asyncio.TimeoutError:
                 await message.channel.send("Took too long!")
+                
+    @commands.command()
+    async def setmod(self, ctx, channel_id):
+        cursor = self.database.cursor()
+        cursor.execute("SELECT mod_channel FROM GuildConfigurables WHERE guild_id={}".format(str(ctx.guild.id)))
+        result = cursor.fetchall()
+        try:
+            if len(result) == 0:
+                cursor.execute("INSERT INTO GuildConfigurables VALUES({}, DEFAULT, DEFAULT, DEFAULT, {})".format(str(ctx.guild.id), str(channel_id)))
+            else:
+                cursor.execute("UPDATE GuildConfigurables SET mod_channel={}".format(str(channel_id)))
+        except Exception as error:
+            print(error)
         
+        finally:
+            cursor.close()
     '''
         command: unmute
 
