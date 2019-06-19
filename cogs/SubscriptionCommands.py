@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from database.dbutils import *
+import re
 
 class SubscriptionCommands(commands.Cog):
     def __init__(self, client):
@@ -30,7 +31,7 @@ class SubscriptionCommands(commands.Cog):
             embed.color=1733275
             await ctx.channel.send(embed=embed)
     @commands.command()
-    async def subscribe(self, ctx, *args):
+    async def sub(self, ctx, *args):
         voice_channels=ctx.guild.voice_channels
         embed=discord.Embed()
         if len(args) == 0:
@@ -71,7 +72,7 @@ class SubscriptionCommands(commands.Cog):
 
                 desc='\n'
                 for voice in voice_channels:
-                    desc += "**{}** : **{}**\n".format(voice.name, voice.id)
+                    desc += "{} ({})\n".format(voice.name, voice.id)
                 await subscribe_user(valid_channel_ids, ctx, self.client.database)
                 embed.set_author(name="{}#{}".format(ctx.author.name, ctx.author.discriminator), icon_url=ctx.author.avatar_url)
                 embed.description="{} was subscribed to:\n{}".format(ctx.author.mention, desc)
@@ -83,10 +84,26 @@ class SubscriptionCommands(commands.Cog):
                 print(error)
 
     @commands.command()
-    async def unsubscribe(self, ctx, channel_id):
+    async def unsub(self, ctx, channel_id):
         voice_channels=map(lambda channel: channel.id, ctx.guild.voice_channels)
-        if int(channel_id) in voice_channels: # If id passed in by user is a valid voice channel...
-            await unsubscribe_user(channel_id, ctx, self.client.database)
+        try:
+            if int(channel_id) in voice_channels: # If id passed in by user is a valid voice channel...
+                await unsubscribe_user(channel_id, ctx, self.client.database)
 
+        except Exception as error:
+            print("Hi")
+            print(error)
+
+    @commands.command()
+    async def wl(self, ctx, channel_id, *args):
+        embed=discord.Embed()
+        cursor = self.database.cursor()
+        mentions = ctx.message.mentions
+        for member in mentions:
+            if member.id != ctx.author.id:
+                cursor.execute("SELECT * FROM VoiceChannelWhitelist WHERE client_id={} AND channel_id={} AND whitelisted_user={}".format(str(ctx.author.id),str(channel_id), str(member.id)))
+                result = cursor.fetchall()
+                print(result)
+        print('done')
 def setup(bot):
     bot.add_cog(SubscriptionCommands(bot))
