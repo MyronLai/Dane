@@ -10,16 +10,23 @@ class AdminTextCommands(commands.Cog):
         
     '''
     Command: Prune
-    mass delete messages using TextChannel.purge() function, must ensure that the command is issued by an Administrator, and that the user id provided is not of an Admin on the server.
+        mass delete messages using TextChannel.purge() function, must ensure that the command is issued by an Administrator, and that the user id provided is not of an Admin on the server. If no user id is passed, it will purge all messages regardless of the author.
+
     '''
     @commands.command()
-    async def prune(self, ctx, *args):
-        if len(args) == 1:
-            if ctx.channel.permissions_for(ctx.author).administrator:
-                flag = False
-                await prune_messages(ctx.message, int(args[0]), flag)
-        elif len(args) == 0:
-            await prune_messages(ctx.message)
+    @commands.has_permissions(administrator=True)
+    async def prune(self, ctx, user_id, limit):
+        try:
+            if int(limit) > 250:
+                raise Exception("Cannot exceed the limit of 250 messages")
+            else:
+                msgs = await ctx.channel.purge(limit=int(limit), check=lambda m: m.author.id == int(user_id))
+                embed=discord.Embed()
+                embed.title='Server Action'
+                embed.description='{} messages were deleted.'.format(str(len(msgs)))
+                await ctx.channel.send(embed=embed)
+        except Exception as error:
+            print(error)
     '''
     Command: setmuterole
         allows the server admin to change the role to give to users when they should not be allowed to send messages. 
@@ -75,7 +82,6 @@ class AdminTextCommands(commands.Cog):
                     print(description_msg)
                     cursor = self.database.cursor()
                     query = "UPDATE GuildConfigurables SET help_msg=\""+description_msg+"\" WHERE guild_id="+(str(ctx.guild.id))
-                    print(query)
                     cursor.execute(query)
                     self.database.commit()
                     cursor.close()
