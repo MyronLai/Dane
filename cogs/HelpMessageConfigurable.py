@@ -2,6 +2,10 @@ import discord
 from discord.ext import commands
 from utilities.utils import *
 import json
+from Exceptions.EmbedException import *
+
+
+
 class HelpMessageConfigurable(commands.Cog):
     def __init__(self, client):
         self.client=client
@@ -118,6 +122,25 @@ class HelpMessageConfigurable(commands.Cog):
                     print(error)
                     await message.channel.send("Took too long!")
                     break
-    
+    @help.command()
+    @commands.has_permissions(administrator=True)
+    async def settitle(self, ctx, *, arg):
+        try:
+            if len(arg) > 256:
+                raise Exception("Title cannot exceed 256 characters")
+            cursor = self.database.cursor()
+            cursor.execute("SELECT help_msg FROM GuildHelpMsg WHERE guild_id=" + str(ctx.guild.id))
+            result = cursor.fetchall()
+            empty = {
+                "msg" : "Set your help message!"
+            }
+            print("Guild does not exist. Add them with defaults.")
+            values = (str(ctx.guild.id), str(arg), arg)
+            cursor.execute("INSERT INTO `GuildHelpMsg` (`guild_id`, `title`) VALUES (%s, %s) ON DUPLICATE KEY UPDATE title=%s", values)
+            embed=discord.Embed()
+            embed.description='You set the title to {}'.format(arg)
+            await ctx.channel.send(embed=embed)
+        except Exception as error:
+            print(error)
 def setup(bot):
     bot.add_cog(HelpMessageConfigurable(bot))
