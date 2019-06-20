@@ -152,14 +152,17 @@ class SubscriptionCommands(commands.Cog):
     @commands.command()
     async def clearwl(self, ctx, channel_id):
         channel = discord.utils.find(lambda c: c.id==int(channel_id), ctx.guild.channels)
-        if channel is not None:
-            cursor = self.database.cursor()
-            cursor.execute("UPDATE VoiceChannelWhitelist SET isWhitelisted = 0 WHERE client_id={} AND channel_id={} AND guild_id={}".format(str(ctx.author.id), str(channel.id), str(ctx.guild.id)))
-            embed=discord.Embed()
-            embed.description="Cleared {]'s whitelist for {}".format(ctx.author.mention, channel.name)
-            await ctx.channel.send(embed=embed)
-        else:
-            print("Channel not found")
+        try:
+            if channel is not None:
+                cursor = self.database.cursor()
+                cursor.execute("UPDATE VoiceChannelWhitelist SET isWhitelisted = 0 WHERE client_id={} AND channel_id={} AND guild_id={}".format(str(ctx.author.id), str(channel.id), str(ctx.guild.id)))
+                embed=discord.Embed()
+                embed.description="Cleared {]'s whitelist for {}".format(ctx.author.mention, channel.name)
+                await ctx.channel.send(embed=embed)
+            else:
+                raise Exception("Channel not found.")
+        except Exception as error:
+            print(error)
     '''
         COMMAND: UNSUBALL ?unsuball
         Unsubs the user from every single channel in the guild where the command was issued. Right now the user's whitelist is not cleared, as they might want to keep it
@@ -173,9 +176,30 @@ class SubscriptionCommands(commands.Cog):
             print('Done')
         except Exception as error:
             print(error)
-
+        finally:
+            cursor.close()
+    
     @commands.command()
     async def suball(self, ctx):
-        pass
+        cursor = self.database.cursor()
+        voice_channels = ctx.guild.voice_channels
+        # Subbing 1 User to ALL Channels in the Guild.
+        # VALUES (channel_id, guild_id,  client_id, 1)
+        values = []
+        for vc in voice_channels:
+            if vc.permissions_for(ctx.author).connect: #If the user can connect to the channel, they will be subscribed!
+                values.append((str(vc.id), str(ctx.guild.id), str(ctx.author.id), 1))
+
+        value_str = ''
+        i = 0
+        for t in values: # Loop through all values and append the tuple to a string.
+            value_str += str(t)
+            value_str += "," if i < len(values)-1 else ''  # Ternary Operator to avoid adding a comma at the last value tuple
+            i+=1
+        
+        try:
+            cursor.execute("INSERT INTO VoiceChannelSubscriptions (channel_id, guild_id, client_id, isSubscribed) VALUES " +str(value_str) + " ON DUPLICATE KEY UPDATE isSubscribed=1")
+        except Exception as error:
+            print(error)
 def setup(bot):
     bot.add_cog(SubscriptionCommands(bot))
