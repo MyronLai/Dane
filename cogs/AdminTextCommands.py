@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from utilities.utils import *
 from database.keywords import *
+import json
 
 class AdminTextCommands(commands.Cog):
     def __init__(self, client):
@@ -63,29 +64,26 @@ class AdminTextCommands(commands.Cog):
     async def sethelp(self, ctx): # Messages should go in Bot Logs
         if ctx.channel.permissions_for(ctx.author).administrator:
             message = ctx.message
-            await message.channel.send("Please enter your message. To separate lines, make sure to add a \\n.")
+            await message.channel.send("Please enter your message.")
             def check(m):
-                return (m.author == ctx.author) or (m.author == ctx.author and m.content == 'yes')
+                return ((m.author == ctx.author) or (m.author == ctx.author and m.content == 'yes')) and m.content.startswith("```")
             
             msg = await self.client.wait_for('message', check=check)
-            array = msg.content.split("\\n")
-            description_msg = ''
-            for line in array:
-                description_msg += line + '\n'
+            msg = parse_help_msg(msg.content)
+            json_msg = { "msg" : msg }
             embed=discord.Embed()
             embed.title='Server Help Directory'
-            embed.description=description_msg
             embed.color=13951737
-
+            embed.description=msg
+            description_msg=''
             try:
                 await message.channel.send("Are you sure you want this?", embed=embed)
-                confirm = await self.client.wait_for('message', check=check,timeout=10)
+                confirm = await self.client.wait_for('message', check=lambda m:m.author == ctx.author and m.content=='yes',timeout=10)
                 try:
                     print(description_msg)
-                    cursor = self.database.cursor()
-                    query = "UPDATE GuildConfigurables SET help_msg=\""+description_msg+"\" WHERE guild_id="+(str(ctx.guild.id))
+                    cursor = self.database.cursor() # Use JSON DUMPS to serialize the json dictionary. Encode it to bytes, and decode to utf-8 when storing it as a string.
+                    query = "UPDATE GuildConfigurables SET help_msg='" + json.dumps(json_msg).encode('unicode_escape').decode('utf-8') + "' WHERE guild_id="+(str(ctx.guild.id))
                     cursor.execute(query)
-                    self.database.commit()
                     cursor.close()
                     embed.title='Server Message'
                     embed.description='Success!'
