@@ -20,7 +20,7 @@ class HelpMessageConfigurable(commands.Cog):
         if ctx.invoked_subcommand is None:
             embed=discord.Embed()
             cursor = self.database.cursor()
-            cursor.execute("SELECT help_msg, title, color, footer FROM GuildHelpMsg WHERE guild_id=" + str(ctx.guild.id))
+            cursor.execute("SELECT help_msg, title, color, footer, image_url FROM GuildHelpMsg WHERE guild_id=" + str(ctx.guild.id))
             result = cursor.fetchall()
             empty = {"msg" : "Set your help message!"}
             if len(result) == 0:
@@ -36,6 +36,7 @@ class HelpMessageConfigurable(commands.Cog):
                     embed.set_footer(text='Please set a help message: ?sethelp')
                     await ctx.channel.send(embed=embed)
                 else:
+                    print(result)
                     msg = result[0][0]
                     title = result[0][1] if result[0][1] is not None else ''
                     icon_url="https://cdn.discordapp.com/icons/{}/{}.png".format(ctx.guild.id, ctx.guild.icon)
@@ -44,6 +45,7 @@ class HelpMessageConfigurable(commands.Cog):
                     embed.description=json.loads(result[0][0])['msg']
                     embed.color=int(result[0][2])
                     embed.set_footer(text=result[0][3]) if result[0][3] is not None else None
+                    embed.set_image(url=result[0][4]) if result[0][4] is not None else None
                     await ctx.channel.send(embed=embed)
         
     @help.command() # sethelp is part of the 'help' group command. This command is used to set the help message.
@@ -195,5 +197,26 @@ class HelpMessageConfigurable(commands.Cog):
             else:
                 print(error)
         # Check if color entered was a Hexadecimal Value.
+
+    @help.command()
+    @commands.has_permissions(administrator=True)
+    async def setimage(self, ctx, image_url):
+        try:
+            if len(image_url) > 256:
+                raise EmbedImageException("URL is too long! Cannot exceed 256 characters.")
+            cursor=self.database.cursor()
+            values=(str(ctx.guild.id), image_url, json.dumps({'msg':'Set your message!'}), image_url)
+            cursor.execute("INSERT INTO GuildHelpMsg (guild_id, image_url, help_msg) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE image_url=%s", values)
+            embed=discord.Embed()
+            embed.description="You set the image url."
+            await ctx.channel.send(embed=embed)
+        except Exception as error:
+            if isinstance(error, EmbedImageException):
+                embed=discord.Embed()
+                embed.title='Hex Color Error'
+                embed.description='Hex color code is out of range!'
+                await ctx.channel.send(embed=embed)
+            else:
+                print(error)
 def setup(bot):
     bot.add_cog(HelpMessageConfigurable(bot))

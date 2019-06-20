@@ -12,3 +12,7 @@ class EmbedColorExcepton(EmbedException):
 class EmbedFooterException(EmbedException):
     def  __init__(self, message):
         self.message=message
+
+class EmbedImageException(EmbedException):
+    def __init__(self, message):
+        self.message=message
