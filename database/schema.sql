@@ -29,6 +29,7 @@ CREATE TABLE GuildConfigurables(
     mute_role BIGINT NOT NULL DEFAULT 0,
     bot_channel BIGINT NOT NULL DEFAULT 0,
     mod_channel BIGINT NOT NULL DEFAULT 0,
+    member_log BIGINT NOT NULL DEFAULT 0,
     FOREIGN KEY (guild_id) REFERENCES Guilds(guild_id)
 );
 -- create a virtual column that is the sum of bans and kicks
@@ -59,4 +60,12 @@ CREATE TABLE VoiceChannelWhitelist(
     isWhitelisted TINYINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (channel_id, client_id, whitelisted_user),
     FOREIGN KEY (guild_id) REFERENCES Guilds (guild_id)
+);
+
+CREATE TABLE GuildHelpMsg(
+    guild_id BIGINT NOT NULL PRIMARY KEY,
+    help_msg JSON NOT NULL,
+    color INT NOT NULL DEFAULT 16027458,
+    title VARCHAR(255) NOT NULL,
+    footer VARCHAR(255) NOT NULL
 );
