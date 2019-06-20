@@ -20,7 +20,7 @@ class HelpMessageConfigurable(commands.Cog):
         if ctx.invoked_subcommand is None:
             embed=discord.Embed()
             cursor = self.database.cursor()
-            cursor.execute("SELECT help_msg FROM GuildHelpMsg WHERE guild_id=" + str(ctx.guild.id))
+            cursor.execute("SELECT help_msg, title, color FROM GuildHelpMsg WHERE guild_id=" + str(ctx.guild.id))
             result = cursor.fetchall()
             empty = {
                 "msg" : "Set your help message!"
@@ -38,9 +38,13 @@ class HelpMessageConfigurable(commands.Cog):
                     embed.set_footer(text='Please set a help message: ?sethelp')
                     await ctx.channel.send(embed=embed)
                 else:
+                    msg = result[0][0]
+                    title = result[0][1] if result[0][1] is not None else ''
                     icon_url="https://cdn.discordapp.com/icons/{}/{}.png".format(ctx.guild.id, ctx.guild.icon)
+                    embed.title=title
                     embed.set_author(name=ctx.guild.name, icon_url=icon_url)
                     embed.description=json.loads(result[0][0])['msg']
+                    embed.color=int(result[0][2])
                     await ctx.channel.send(embed=embed)
         
     @help.command() # sethelp is part of the 'help' group command. This command is used to set the help message.
@@ -133,8 +137,8 @@ class HelpMessageConfigurable(commands.Cog):
                 "msg" : "Set your help message!"
             }
             print("Guild does not exist. Add them with defaults.")
-            values = (str(ctx.guild.id), str(arg), arg)
-            cursor.execute("INSERT INTO `GuildHelpMsg` (`guild_id`, `title`) VALUES (%s, %s) ON DUPLICATE KEY UPDATE title=%s", values)
+            values = (str(ctx.guild.id), str(arg), json.dumps(empty), arg)
+            cursor.execute("INSERT INTO `GuildHelpMsg` (`guild_id`, `title`, `help_msg`) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE title=%s", values)
             embed=discord.Embed()
             embed.description='You set the title to {}'.format(arg)
             await ctx.channel.send(embed=embed)
@@ -155,8 +159,8 @@ class HelpMessageConfigurable(commands.Cog):
             if color >= pow(2,24):
                 raise EmbedColorExcepton("Hexadecimal number is out of range!")
             cursor=self.database.cursor()
-            values=(str(ctx.guild.id), color, color)
-            cursor.execute("INSERT INTO `GuildHelpMsg` (`guild_id`, `color`) VALUES (%s, %s) ON DUPLICATE KEY UPDATE color=%s", values)
+            values=(str(ctx.guild.id), color, json.dumps({ 'msg': 'Set your message!'}), color)
+            cursor.execute("INSERT INTO `GuildHelpMsg` (`guild_id`, `color`, `help_msg`) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE color=%s", values)
             embed=discord.Embed()
             embed.description='You set the embed color.'
             await ctx.channel.send(embed=embed)
