@@ -20,18 +20,16 @@ class HelpMessageConfigurable(commands.Cog):
         if ctx.invoked_subcommand is None:
             embed=discord.Embed()
             cursor = self.database.cursor()
-            cursor.execute("SELECT help_msg, title, color FROM GuildHelpMsg WHERE guild_id=" + str(ctx.guild.id))
+            cursor.execute("SELECT help_msg, title, color, footer FROM GuildHelpMsg WHERE guild_id=" + str(ctx.guild.id))
             result = cursor.fetchall()
-            empty = {
-                "msg" : "Set your help message!"
-            }
+            empty = {"msg" : "Set your help message!"}
             if len(result) == 0:
                 print("Guild does not exist. Add them with defaults.")
                 cursor.execute("INSERT INTO GuildHelpMsg (guild_id, help_msg) VALUES ({}, '{}')".format(str(ctx.guild.id), json.dumps(empty)))
                 embed.description='You do not have a help message set. ?sethelp'
                 await ctx.channel.send(embed=embed)
             else:
-                if result[0][0] is None:
+                if result[0][0] is None:  # IF THE HELP_MSG FIELD IS NULL
                     icon_url="https://cdn.discordapp.com/icons/{}/{}.png".format(ctx.guild.id, ctx.guild.icon)
                     embed.set_author(name=ctx.guild.name, icon_url=icon_url)
                     embed.description='No help message set!'
@@ -45,6 +43,7 @@ class HelpMessageConfigurable(commands.Cog):
                     embed.set_author(name=ctx.guild.name, icon_url=icon_url)
                     embed.description=json.loads(result[0][0])['msg']
                     embed.color=int(result[0][2])
+                    embed.set_footer(text=result[0][3]) if result[0][3] is not None else None
                     await ctx.channel.send(embed=embed)
         
     @help.command() # sethelp is part of the 'help' group command. This command is used to set the help message.
@@ -174,5 +173,27 @@ class HelpMessageConfigurable(commands.Cog):
                 print(error)
         # Check if color entered was a Hexadecimal Value.
 
+    @help.command()
+    @commands.has_permissions(administrator=True)
+    async def setfooter(self, ctx, *, footer):
+        try:
+            print(footer)
+            if len(footer) > 2048:
+                raise EmbedFooterException("Hexadecimal number is out of range!")
+            cursor=self.database.cursor()
+            values=(str(ctx.guild.id), footer, json.dumps({ 'msg': 'Set your message!'}), footer)
+            cursor.execute("INSERT INTO `GuildHelpMsg` (`guild_id`, `footer`, `help_msg`) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE footer=%s", values)
+            embed=discord.Embed()
+            embed.description='You set the footer'
+            await ctx.channel.send(embed=embed)
+        except Exception as error:
+            if isinstance(error, EmbedFooterException):
+                embed=discord.Embed()
+                embed.title='Hex Color Error'
+                embed.description='Hex color code is out of range!'
+                await ctx.channel.send(embed=embed)
+            else:
+                print(error)
+        # Check if color entered was a Hexadecimal Value.
 def setup(bot):
     bot.add_cog(HelpMessageConfigurable(bot))

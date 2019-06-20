@@ -8,3 +8,7 @@ class EmbedTitleError(EmbedException):
 class EmbedColorExcepton(EmbedException):
     def __init__(self, message):
         self.message = message
+
+class EmbedFooterException(EmbedException):
+    def  __init__(self, message):
+        self.message=message
