@@ -63,6 +63,19 @@ class AdminTextCommands(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def sethelp(self, ctx): # Messages should go in Bot Logs
         if ctx.channel.permissions_for(ctx.author).administrator:
+
+            # Make sure the Database has the Guild.
+            try:
+                cursor = self.database.cursor()
+                cursor.execute("SELECT * FROM Guilds WHERE guild_id={}".format(str(ctx.guild.id)))
+                result = cursor.fetchall()
+                if len(result) == 0: # Guild is not in DB!
+                    cursor.execute("INSERT INTO Guilds VALUES({}, {}, {}, {}, {}".format(str(ctx.guild.id), str(ctx.guild.owner_id), ctx.guild.name, len(ctx.guild.members), str(ctx.guild.created_at)))
+                else:
+                    print("Guild is in DB! Continue")
+            except Exception as error:
+                print(error)
+            
             message = ctx.message
             choice = 'yes'
             while choice.lower() == 'yes':
@@ -97,8 +110,10 @@ class AdminTextCommands(commands.Cog):
                         try:
                             print(description_msg)
                             cursor = self.database.cursor() # Use JSON DUMPS to serialize the json dictionary. Encode it to bytes, and decode to utf-8 when storing it as a string.
-                            query = "UPDATE GuildConfigurables SET help_msg='" + json.dumps(json_msg).encode('unicode_escape').decode('utf-8') + "' WHERE guild_id="+(str(ctx.guild.id))
-                            cursor.execute(query)
+                            #query = "UPDATE GuildConfigurables SET help_msg='" + json.dumps(json_msg).encode('unicode_escape').decode('utf-8') + "' WHERE guild_id="+(str(ctx.guild.id))
+                            help_msg = json.dumps(json_msg).encode('unicode_escape').decode('utf-8')
+                            msg_value = json.dumps(json_msg['msg'])  # Dump the JSON to preserve the newline characters
+                            cursor.execute("INSERT INTO GuildHelpMsg (guild_id, help_msg) VALUES(" + str(ctx.guild.id) + ",'" + help_msg +"') ON DUPLICATE KEY UPDATE help_msg=JSON_SET(help_msg, \"$.msg\"," +msg_value +")")
                             cursor.close()
                             embed.title='Server Message'
                             embed.description='Success!'
@@ -109,6 +124,8 @@ class AdminTextCommands(commands.Cog):
                             embed.description=str(error)
                             embed.color=16724999
                             await message.channel.send(embed=embed)
+                        finally:
+                            break # Break out of loop once the user says yes.
                     else:
                         await ctx.channel.send("Do you want to try again? Yes/No")
                         choice = await self.client.wait_for('message', check=check) # This will call the check function inside it's try scope.
