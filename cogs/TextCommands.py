@@ -4,33 +4,47 @@ import random
 from database.dbutils import *
 from utilities.utils import *
 from utilities.courses import *
+import json
 
 class TextCommands(commands.Cog):
 
     def __init__(self, client):
         self.client = client
         self.database = self.client.database
-        
+    
+    async def cmds(self, ctx):
+        pass
+
+    '''
+        Notes:
+            If the admin issues this command, check if their record exists in the GuildHelpMsg table. If it doesn't, insert them with default help_msg {}
+    '''
+
     @commands.command()
     async def help(self, ctx):
         embed=discord.Embed()
         cursor = self.database.cursor()
-        cursor.execute("SELECT help_msg FROM GuildConfigurables WHERE guild_id=" + str(ctx.guild.id))
+        cursor.execute("SELECT help_msg FROM GuildHelpMsg WHERE guild_id=" + str(ctx.guild.id))
         result = cursor.fetchall()
+        empty = {
+            "msg" : "Set your help message!"
+        }
         if len(result) == 0:
             print("Guild does not exist. Add them with defaults.")
-            cursor.execute("INSERT INTO GuildConfigurables (guild_id) VALUES ({})".format(str(ctx.guild.id)))
+            cursor.execute("INSERT INTO GuildHelpMsg (guild_id, help_msg) VALUES ({}, '{}')".format(str(ctx.guild.id), json.dumps(empty)))
+            embed.description='You do not have a help message set. ?sethelp'
+            await ctx.channel.send(embed=embed)
         else:
             if result[0][0] is None:
-                embed.set_author(name=self.client.user.name, icon_url=self.client.user.avatar_url)
+                icon_url="https://cdn.discordapp.com/icons/{}/{}.png".format(ctx.guild.id, ctx.guild.icon)
+                embed.set_author(name=ctx.guild.name, icon_url=icon_url)
                 embed.description='No help message set!'
                 embed.set_footer(text='Please set a help message: ?sethelp')
                 await ctx.channel.send(embed=embed)
             else:
-                embed.title='Information For {}'.format(ctx.guild.name)
-                embed.set_author(name=self.client.user.name, icon_url=self.client.user.avatar_url)
-                embed.description=result[0][0]
-                embed.set_footer(text=ctx.guild.name)
+                icon_url="https://cdn.discordapp.com/icons/{}/{}.png".format(ctx.guild.id, ctx.guild.icon)
+                embed.set_author(name=ctx.guild.name, icon_url=icon_url)
+                embed.description=json.loads(result[0][0])['msg']
                 await ctx.channel.send(embed=embed)
     '''
         Get a List of "Assignable" roles, i.e: Non-Admin, Non-Mod, Non-Permission roles.
