@@ -34,6 +34,7 @@ class AdminTextCommands(commands.Cog):
         NOTE: Admins are responsible for ensuring permissions are set for each channel. This gives admins the flexibility to decide which channels a user should be able to send messages in, and which channels they can only read messages.
     '''
     @commands.command()
+    @commands.has_permissions(administrator=True)
     async def setmute(self, ctx, role_id): # Messages should go in Mod-Logs.
         message = ctx.message
         muted_role = discord.utils.find(lambda role: role.id==int(role_id), ctx.guild.roles)
@@ -58,6 +59,7 @@ class AdminTextCommands(commands.Cog):
             await message.channel.send("The role with id " + str(role_id) + " was not found! Please try again.")
         
     @commands.command()
+    @commands.has_permissions(administrator=True)
     async def sethelp(self, ctx): # Messages should go in Bot Logs
         if ctx.channel.permissions_for(ctx.author).administrator:
             message = ctx.message
@@ -98,7 +100,8 @@ class AdminTextCommands(commands.Cog):
                 await message.channel.send("Took too long!")
                 
     @commands.command()
-    async def setmod(self, ctx, channel_id):
+    @commands.has_permissions(administrator=True)
+    async def setmodchannel(self, ctx, channel_id):
         cursor = self.database.cursor()
         cursor.execute("SELECT mod_channel FROM GuildConfigurables WHERE guild_id={}".format(str(ctx.guild.id)))
         result = cursor.fetchall()
@@ -119,6 +122,7 @@ class AdminTextCommands(commands.Cog):
             user_id (int): The id of the user to unmute
     '''
     @commands.command() # Message should go in Bot Logs
+    @commands.has_permissions(kick_members=True)
     async def unmute(self, ctx, user_id):
         message = ctx.message
         user = discord.utils.find(lambda user: user.id==int(user_id), ctx.guild.members)
@@ -152,6 +156,7 @@ class AdminTextCommands(commands.Cog):
         args: 
     '''
     @commands.command()
+    @commands.has_permissions(kick_members=True)
     async def mute(self, ctx, user_id, mute_reason):
         message = ctx.message
         member_to_mute = discord.utils.get(ctx.guild.members, id=int(user_id))
@@ -194,9 +199,10 @@ class AdminTextCommands(commands.Cog):
             reason (string) : - Reason of the ban3
     '''
     @commands.command()
+    @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, user_id, reason):
         user = discord.utils.get(ctx.guild.members, id=int(user_id))
-        if ctx.channel.permissions_for(ctx.author).ban_members and user is not None:
+        if user is not None:
             if ctx.author.id == ctx.guild.owner_id: # If the command was triggered by the Owner
                 await ctx.guild.ban(user, delete_message_days=1, reason=reason)
             elif ctx.channel.permissions_for(user).ban_members:
@@ -207,14 +213,15 @@ class AdminTextCommands(commands.Cog):
             print('Non-Admin trying to issue a ban')
     
     @commands.command()
+    @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, user_id):
-        if ctx.channel.permissions_for(ctx.author).ban_members:
-            banned_users = await ctx.guild.bans()
-            user = discord.utils.find(lambda ban: ban.user.id==int(user_id), banned_users).user
-            await ctx.guild.unban(user)
-            print("Unbanned")
+        banned_users = await ctx.guild.bans()
+        user = discord.utils.find(lambda ban: ban.user.id==int(user_id), banned_users).user
+        await ctx.guild.unban(user)
+        print("Unbanned")
     
     @commands.command()
+    @commands.has_permissions(kick_members=True)
     async def kick(self, ctx, user_id, reason):
         await kickUser(ctx, int(user_id), reason)
         
