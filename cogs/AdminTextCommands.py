@@ -64,38 +64,59 @@ class AdminTextCommands(commands.Cog):
     async def sethelp(self, ctx): # Messages should go in Bot Logs
         if ctx.channel.permissions_for(ctx.author).administrator:
             message = ctx.message
-            await message.channel.send("Please enter your message.")
-            def check(m):
-                return ((m.author == ctx.author) or (m.author == ctx.author and m.content == 'yes')) and m.content.startswith("```")
-            
-            msg = await self.client.wait_for('message', check=check)
-            msg = parse_help_msg(msg.content)
-            json_msg = { "msg" : msg }
-            embed=discord.Embed()
-            embed.title='Server Help Directory'
-            embed.color=13951737
-            embed.description=msg
-            description_msg=''
-            try:
-                await message.channel.send("Are you sure you want this?", embed=embed)
-                confirm = await self.client.wait_for('message', check=lambda m:m.author == ctx.author and m.content=='yes',timeout=10)
-                try:
-                    print(description_msg)
-                    cursor = self.database.cursor() # Use JSON DUMPS to serialize the json dictionary. Encode it to bytes, and decode to utf-8 when storing it as a string.
-                    query = "UPDATE GuildConfigurables SET help_msg='" + json.dumps(json_msg).encode('unicode_escape').decode('utf-8') + "' WHERE guild_id="+(str(ctx.guild.id))
-                    cursor.execute(query)
-                    cursor.close()
-                    embed.title='Server Message'
-                    embed.description='Success!'
-                    embed.color=10747835
-                    await message.channel.send(embed=embed)
-                except Exception as error:
-                    embed.title='Server Error'
-                    embed.description=str(error)
-                    embed.color=16724999
-                    await message.channel.send(embed=embed)
-            except asyncio.TimeoutError:
-                await message.channel.send("Took too long!")
+            choice = 'yes'
+            while choice.lower() == 'yes':
+                await message.channel.send("Please enter your message.")
+                '''
+                    - Filter function. 
+                    - Checks if message is from original author.
+                    - Checks if the original author's message starts with ``` and ends with ```
+                '''
+                def check(m): 
+                    return m.author == ctx.author and (m.content.startswith("```") and m.content.endswith("```"))
+                        
+                msg = await self.client.wait_for('message', check=check) 
+                msg = parse_help_msg(msg.content) # Parse message
+                json_msg = { "msg" : msg } 
+                embed=discord.Embed()
+                embed.title='Server Help Directory'
+                embed.color=13951737
+                embed.description=msg
+                description_msg=''
+                try: # Loop until the user says yes or quit
+                    await message.channel.send("Are you sure you want this? Yes/No", embed=embed)
+                    '''
+                        - Checks if original author.
+                        - Checks if the user typed yes/no 
+                    '''
+                    def check(m):
+                        return m.author == ctx.author and (m.content.lower()=='yes' or m.content.lower() =='no')
+                    
+                    confirm = await self.client.wait_for('message', check=check, timeout=30)
+                    if confirm.content.lower() == 'yes': # If they entered yes, save their response to the database.
+                        try:
+                            print(description_msg)
+                            cursor = self.database.cursor() # Use JSON DUMPS to serialize the json dictionary. Encode it to bytes, and decode to utf-8 when storing it as a string.
+                            query = "UPDATE GuildConfigurables SET help_msg='" + json.dumps(json_msg).encode('unicode_escape').decode('utf-8') + "' WHERE guild_id="+(str(ctx.guild.id))
+                            cursor.execute(query)
+                            cursor.close()
+                            embed.title='Server Message'
+                            embed.description='Success!'
+                            embed.color=10747835
+                            await message.channel.send(embed=embed)
+                        except Exception as error:
+                            embed.title='Server Error'
+                            embed.description=str(error)
+                            embed.color=16724999
+                            await message.channel.send(embed=embed)
+                    else:
+                        await ctx.channel.send("Do you want to try again? Yes/No")
+                        choice = await self.client.wait_for('message', check=check) # This will call the check function inside it's try scope.
+                        choice = choice.content.lower() # If choice is not yes, it will break the loop.
+                except (Exception, asyncio.TimeoutError) as error:
+                    print(error)
+                    await message.channel.send("Took too long!")
+                    break
                 
     @commands.command()
     @commands.has_permissions(administrator=True)
