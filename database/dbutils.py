@@ -10,6 +10,7 @@ async def subscribe_user(channel_id, ctx, database):
                 cursor.execute("INSERT INTO VoiceChannelSubscriptions VALUES({}, {}, {}, {})".format(channel_id, ctx.guild.id, ctx.author.id, 1))
             else:
                 cursor.execute("UPDATE VoiceChannelSubscriptions SET isSubscribed=1 WHERE client_id={} AND channel_id={}".format(ctx.author.id, channel_id))
+            print("Done")
         except Exception as error:
             print(error)
         

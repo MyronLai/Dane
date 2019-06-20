@@ -16,6 +16,10 @@ def hasRole(member, role):
     print(currentRole)
     return currentRole != None
 
+def parse_help_msg(msg):
+    return re.sub('(```[\n\t]*)', '', msg)
+
+
 async def display_help(ctx, database):
     cursor = database.cursor()
     cursor.execute("SELECT help_msg FROM Guilds WHERE guild_id = " +  str(ctx.guild.id))
@@ -203,7 +207,6 @@ async def queryCourse(client, message):
         embed.description='Too many arguments. Usage: ?course <subject> <code> <professor?>'
         embed.color=9633965
         await message.channel.send(embed=embed)
-
 
 async def kickUser(ctx, user_id, reason):
     user = discord.utils.find(lambda u: u.id==int(user_id), ctx.guild.members)

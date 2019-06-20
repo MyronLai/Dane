@@ -45,22 +45,30 @@ class SubscriptionCommands(commands.Cog):
             embed.set_author(name=self.client.user.name, icon_url=self.client.user.avatar_url)
             await ctx.channel.send(embed=embed)
             
+            '''
+                This filter validates the voice channel for us.
+            '''
             def check(msg):
                 try:
                     return msg.author.id == ctx.author.id and discord.utils.get(voice_channels, id=int(msg.content)) is not None
                 except Exception as error:
                     print(error)
 
-            response = await self.client.wait_for('message', check=check)
-            # Now subscribe the user to the database.
-            await subscribe_user(response.content, ctx, self.database)
+            try:
+                response = await self.client.wait_for('message', check=check)
+                # Now subscribe the user to the database.
+                await subscribe_user(response.content, ctx, self.database)
+                channel = discord.utils.get(voice_channels, id=int(response.content))
+                embed.title='Success!'
+                embed.description=ctx.author.mention + ' was subscribed to ' + channel.name
+                await ctx.channel.send(embed=embed)
+            except Exception as error:
+                print(error)
                 
         else: # This case is for Users that call the command with specified voice channel ids
             def filter_ids(iter): # Filter function to filter out all invalid Voice Channel Ids
-                if discord.utils.find(lambda channel:channel.id==int(iter), voice_channels) is not None:
-                    return True
-                else:
-                    return False
+                return True if discord.utils.find(lambda channel:channel.id==int(iter), voice_channels) else False
+                
             valid_channel_ids = list(filter(filter_ids, args))
             try:
                 #voice_channels = map(lambda c : c.name, voice_channels)
@@ -91,7 +99,6 @@ class SubscriptionCommands(commands.Cog):
                 await unsubscribe_user(channel_id, ctx, self.client.database)
 
         except Exception as error:
-            print("Hi")
             print(error)
 
     @commands.command()
@@ -153,7 +160,7 @@ class SubscriptionCommands(commands.Cog):
         COMMAND: CLEAR WHITELIST ?clearwl
         Clears the user's whitelist for a given channel. Internally on the server it will set all of their records for 'isSubscribed' to 0.
         Clearing a whitelist does not unsubscribe you from the channel.
-        
+
     '''
     @commands.command()
     async def clearwl(self, ctx, channel_id):
@@ -179,7 +186,7 @@ class SubscriptionCommands(commands.Cog):
         cursor = self.database.cursor()
         try:
             cursor.execute("UPDATE VoiceChannelSubscriptions SET isSubscribed=0 WHERE client_id={} AND guild_id={}".format(str(ctx.author.id), str(ctx.guild.id)))
-            print('Done')
+            await ctx.invoke(self.client.get_command('subbed'))
         except Exception as error:
             print(error)
         finally:
@@ -208,6 +215,7 @@ class SubscriptionCommands(commands.Cog):
         
         try:
             cursor.execute("INSERT INTO VoiceChannelSubscriptions (channel_id, guild_id, client_id, isSubscribed) VALUES " +str(value_str) + " ON DUPLICATE KEY UPDATE isSubscribed=1")
+            await ctx.invoke(self.client.get_command('subbed')) #Invoke te sub command which displays all subbed channels
         except Exception as error:
             print(error)
 def setup(bot):

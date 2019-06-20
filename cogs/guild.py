@@ -11,16 +11,20 @@ class GuildUpdateEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
-
+        
+        print("{} joined {}".format(self.client.user.name, guild.name))
         cursor = self.database.cursor()
         date = str(guild.created_at)
-        values = (str(guild.id), str(guild.owner_id), guild.name, len(guild.members), date)\
+        values = (str(guild.id), str(guild.owner_id), guild.name, len(guild.members), date)
             
         try:    
-            query = "INSERT INTO " + SQLTables.GUILDS.value + " VALUES "  + str(values)
+            query = "INSERT INTO " + SQLTables.GUILDS.value + " VALUES "  + str(values) # Insert into Guilds table.
             cursor.execute(query)
-            query = SQLKeywords.INSERT.value + " " + SQLTables.CONFIGURABLES.value + " (guild_id) VALUES ("  + str(guild.id) + ")"
+
+            # Insert the Guild into GuildConfigurables Table, setting all default values.
+            query = SQLKeywords.INSERT.value + " " + SQLTables.CONFIGURABLES.value + " (guild_id) VALUES ("  + str(guild.id) + ")" 
             cursor.execute(query)
+            print("Added Guild to Database table Guilds")
         except Exception as error:
             print(error)
         finally:
