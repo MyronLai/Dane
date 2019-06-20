@@ -25,7 +25,7 @@ async def display_help(ctx, database):
     embed.title = 'Help Directory & Information'
     embed.description = msg
     embed.color = 13951737
-
+    
     await ctx.channel.send(embed=embed)
 
 async def remove_roles(ctx, roles):
@@ -166,7 +166,7 @@ async def build_embeds_prof(course_results, message, args, search_term, cache_ke
         await message.channel.send(embed=currentEmbed)
 
 async def queryCourse(client, message):
-
+    
     args = message.content.split(" ")
 
     if len(args) == 3:
@@ -178,7 +178,7 @@ async def queryCourse(client, message):
                 await message.channel.send(embed=embeds)
         else:
             print("Does not exist in cache.")
-            course_results = await courses.getCourses(args[1], args[2])
+            course_results = await getCourses(args[1], args[2])
             await build_embeds(message, course_results, args, cache_key)
             
     elif len(args) == 4: # If 4, they specified a professor.
@@ -190,7 +190,7 @@ async def queryCourse(client, message):
                 await message.channel.send(embed=embeds)
 
         else:
-            course_results = await courses.getCourses(args[1], args[2])
+            course_results = await getCourses(args[1], args[2])
             currentEmbed = discord.Embed()
             search_term = args[3]
             print(search_term)
@@ -204,33 +204,6 @@ async def queryCourse(client, message):
         embed.color=9633965
         await message.channel.send(embed=embed)
 
-'''
-    Prunes a given number of messages in a channel. This is an Admin function and should be used carefully.
-
-    args:
-        message (Message): The message object
-        user_id (int): The id of the user's messages to delete
-        prune_all (boolean) : Whether to prune all messages or only by user id.
-    
-    returns:
-        boolean: True if successful, False otherwise.
-'''
-async def prune_messages(message, user_id=-1, prune_all=True):
-    # Check if the user who issued the command has permission.
-    def is_owner(): # Return true if the person using the command is owner.
-        return message.author.id == message.guild.owner_id
-
-    if prune_all: # Prune all messages should only be available to owner.
-        print("Pruning ALL messages, regardless of who the author is.")
-        if is_owner():
-            await message.channel.purge(limit=50)
-            # Should add a check to prevent Admins from deleting Owner Messages.
-
-    else:
-        print("Pruning " + str(user_id))
-        owner_id = message.guild.owner_id
-        if message.author.id == owner_id:
-            await message.channel.purge(limit=50, check=(lambda m: int(m.author.id == user_id)))
 
 async def kickUser(ctx, user_id, reason):
     user = discord.utils.find(lambda u: u.id==int(user_id), ctx.guild.members)
