@@ -4,8 +4,6 @@ from utilities.utils import *
 import json
 from Exceptions.EmbedException import *
 
-
-
 class HelpMessageConfigurable(commands.Cog):
     def __init__(self, client):
         self.client=client
@@ -127,7 +125,7 @@ class HelpMessageConfigurable(commands.Cog):
     async def settitle(self, ctx, *, arg):
         try:
             if len(arg) > 256:
-                raise Exception("Title cannot exceed 256 characters")
+                raise EmbedTitleError("Title cannot exceed 256 characters.")
             cursor = self.database.cursor()
             cursor.execute("SELECT help_msg FROM GuildHelpMsg WHERE guild_id=" + str(ctx.guild.id))
             result = cursor.fetchall()
@@ -141,6 +139,36 @@ class HelpMessageConfigurable(commands.Cog):
             embed.description='You set the title to {}'.format(arg)
             await ctx.channel.send(embed=embed)
         except Exception as error:
-            print(error)
+            if isinstance(error, EmbedTitleError):
+                embed=discord.Embed()
+                embed.title='Embed Title Characters Limit'
+                embed.description='Embed titles cannot exceed 256 characters.'
+                await ctx.channel.send(embed=embed)
+            else:
+                print(error)
+    @help.command()
+    @commands.has_permissions(administrator=True)
+    async def setcolor(self, ctx, color):
+        color=int(color, 16)
+        try:
+            print(color)
+            if color >= pow(2,24):
+                raise EmbedColorExcepton("Hexadecimal number is out of range!")
+            cursor=self.database.cursor()
+            values=(str(ctx.guild.id), color, color)
+            cursor.execute("INSERT INTO `GuildHelpMsg` (`guild_id`, `color`) VALUES (%s, %s) ON DUPLICATE KEY UPDATE color=%s", values)
+            embed=discord.Embed()
+            embed.description='You set the embed color.'
+            await ctx.channel.send(embed=embed)
+        except Exception as error:
+            if isinstance(error, EmbedColorExcepton):
+                embed=discord.Embed()
+                embed.title='Hex Color Error'
+                embed.description='Hex color code is out of range!'
+                await ctx.channel.send(embed=embed)
+            else:
+                print(error)
+        # Check if color entered was a Hexadecimal Value.
+
 def setup(bot):
     bot.add_cog(HelpMessageConfigurable(bot))
