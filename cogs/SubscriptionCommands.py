@@ -131,14 +131,17 @@ class SubscriptionCommands(commands.Cog):
             description=''
             for channel_id in whitelist:
                 channel = discord.utils.find(lambda c: c.id==int(channel_id), ctx.guild.voice_channels)
-                print("Channel Name: " + channel.name)
                 subscribed_users = whitelist[channel_id]
-                description+="__**Channel:**__ {}\n**Id: **{}\n\n".format(channel.name, str(channel.id))
+                #description+="__**Channel:**__ {}\n**Id: **{}\n\n".format(channel.name, str(channel.id))
                 for user in subscribed_users:
                     description += user.mention + "\n"
-            
+                embed.add_field(name=channel.name, value=description)
+            icon_url="https://cdn.discordapp.com/icons/{}/{}.png".format(ctx.guild.id, ctx.guild.icon)
+            embed.set_thumbnail(url=icon_url)
             embed.set_author(name="{}#{}'s Voice Channel Whitelist".format(ctx.author.name, str(ctx.author.discriminator)), icon_url=ctx.author.avatar_url)
-            embed.description=description
+            embed.color=1900482
+            embed.set_footer(text='To whitelist someone, first subscribe to a channel, and then issue the command: e.g: ?wl 582319490604335107 @UserToWhitelist#1337')
+            
             await ctx.channel.send(embed=embed)
 
     '''
