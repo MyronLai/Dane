@@ -117,14 +117,32 @@ class SubscriptionCommands(commands.Cog):
             else:
                 embed.description="Channel was not found"
                 await ctx.channel.send(embed=embed)
-        else:
-            embed.title="{}'s whitelist"
-            cursor.execute("SELECT whitelisted_user, channel_id WHERE guild_id={} AND isWhitelisted=1".format(str(ctx.guild.id)))
-            result=cursor.fetchall()
-            embed.description=str(result)
+        else: # Need to list the white list for channels ONLY if they are subscribed.
+            cursor.execute("SELECT channel_id, whitelisted_user FROM VoiceChannelWhitelist WHERE guild_id={} AND client_id={} AND isWhitelisted=1".format(str(ctx.guild.id), str(ctx.author.id)))   
+            result=cursor.fetchall() # This will return a  list of tuples that contain the whitelisted user, and the channel.
+            whitelist = {}
+            for row in result: # Loop through each row from the result set.
+                member = discord.utils.find(lambda m: m.id==int(row[1]), ctx.guild.members)
+                if row[0] in whitelist and member is not None: # Check if row[0], (the channel id) is in the dictionary.
+                    whitelist[row[0]].append(member) # If it is, add row[1] (the whitelisted user) to the dictionary's array
+                elif member is not None:
+                    whitelist[row[0]] = [member]
+            
+            description=''
+            for channel_id in whitelist:
+                channel = discord.utils.find(lambda c: c.id==int(channel_id), ctx.guild.voice_channels)
+                print("Channel Name: " + channel.name)
+                subscribed_users = whitelist[channel_id]
+                description+="__**Channel:**__ {}\n**Id: **{}\n\n".format(channel.name, str(channel.id))
+                for user in subscribed_users:
+                    description += user.mention + "\n"
+            
+            embed.set_author(name="{}#{}'s Voice Channel Whitelist".format(ctx.author.name, str(ctx.author.discriminator)), icon_url=ctx.author.avatar_url)
+            embed.description=description
             await ctx.channel.send(embed=embed)
 
     '''
+        COMMAND: CLEAR WHITELIST ?clearwl
         Clears the user's whitelist for a given channel. Internally on the server it will set all of their records for 'isSubscribed' to 0.
     '''
     @commands.command()
