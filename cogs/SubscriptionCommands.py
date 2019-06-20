@@ -127,7 +127,7 @@ class SubscriptionCommands(commands.Cog):
                     whitelist[row[0]].append(member) # If it is, add row[1] (the whitelisted user) to the dictionary's array
                 elif member is not None:
                     whitelist[row[0]] = [member]
-            
+            # So all of the records from the  DB is correct. We have a bug with this for loop.
             description=''
             for channel_id in whitelist:
                 channel = discord.utils.find(lambda c: c.id==int(channel_id), ctx.guild.voice_channels)
@@ -135,7 +135,8 @@ class SubscriptionCommands(commands.Cog):
                 #description+="__**Channel:**__ {}\n**Id: **{}\n\n".format(channel.name, str(channel.id))
                 for user in subscribed_users:
                     description += user.mention + "\n"
-                embed.add_field(name=channel.name, value=description)
+                embed.add_field(name=channel.name + "\n" + str(channel.id), value=description,inline=True)
+                description=''
             icon_url="https://cdn.discordapp.com/icons/{}/{}.png".format(ctx.guild.id, ctx.guild.icon)
             embed.set_thumbnail(url=icon_url)
             embed.set_author(name="{}#{}'s Voice Channel Whitelist".format(ctx.author.name, str(ctx.author.discriminator)), icon_url=ctx.author.avatar_url)
@@ -153,16 +154,25 @@ class SubscriptionCommands(commands.Cog):
         channel = discord.utils.find(lambda c: c.id==int(channel_id), ctx.guild.channels)
         if channel is not None:
             cursor = self.database.cursor()
-            cursor.execute("UPDATE VoiceChannelWhitelist SET isSubscribed=0 WHERE client_id={} AND channel_id={} AND guild_id={}".format(str(ctx.author.id), str(channel.id), str(ctx.guild.id)))
+            cursor.execute("UPDATE VoiceChannelWhitelist SET isWhitelisted = 0 WHERE client_id={} AND channel_id={} AND guild_id={}".format(str(ctx.author.id), str(channel.id), str(ctx.guild.id)))
             embed=discord.Embed()
             embed.description="Cleared {]'s whitelist for {}".format(ctx.author.mention, channel.name)
             await ctx.channel.send(embed=embed)
         else:
             print("Channel not found")
-    
+    '''
+        COMMAND: UNSUBALL ?unsuball
+        Unsubs the user from every single channel in the guild where the command was issued. Right now the user's whitelist is not cleared, as they might want to keep it
+        for some other time they wish to resubscribe. They will not receive a notification when a user joins a channel, even if they are on the whitelist. This is good!
+    '''
     @commands.command()
     async def unsuball(self, ctx):
-        pass
+        cursor = self.database.cursor()
+        try:
+            cursor.execute("UPDATE VoiceChannelSubscriptions SET isSubscribed=0 WHERE client_id={} AND guild_id={}".format(str(ctx.author.id), str(ctx.guild.id)))
+            print('Done')
+        except Exception as error:
+            print(error)
 
     @commands.command()
     async def suball(self, ctx):
