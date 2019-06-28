@@ -2,6 +2,9 @@ import discord
 from discord.ext import commands
 from database.dbutils import *
 import re
+import datetime
+
+NOTIFIED = []
 
 class SubscriptionCommands(commands.Cog):
     def __init__(self, client):
@@ -218,5 +221,79 @@ class SubscriptionCommands(commands.Cog):
             await ctx.invoke(self.client.get_command('subbed')) #Invoke te sub command which displays all subbed channels
         except Exception as error:
             print(error)
+        '''
+        - If a User does not have a whitelist, then they will receive  notifications for ALL members that join.
+        - If a User's whitelist contains at least one user, then we will only send notifications when that user joins.
+        - If a User is in a Voice Channel, and another user joins a voice channel that is in the same Guild and is also on the user's whitelist, the user will NOT be notified
+        - If a User is in a Voice Channel on another Guild, and someone joins a voice channel in another Guild that the User is also subscribed to, they will receive a notification if that person who joined is on the whitelist.
+    '''
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        
+        if before.channel is None and after.channel is not None: # User joins a Voice Channel while not being in one.
+            cursor = self.database.cursor()
+            # This query will give us ALL of the Clients that are subscribed to the voice channel some user just joined.
+            cursor.execute("SELECT client_id FROM VoiceChannelSubscriptions WHERE channel_id={} AND isSubscribed={}".format(str(after.channel.id), 1))
+            result = cursor.fetchall()
+            for id in result: # Loop through each id in the result set. Each ID represents the client subscribed.
+                current_member = discord.utils.find(lambda m: m.id==int(id[0]), member.guild.members) # Check if the Member exists in Guild.
+                if current_member is not None and current_member.id != member.id: # If member is not none, and also not the  person who joined.
+                    # We need to get the CLIENT's whitelist and check if the member who joined is in the whitelist.
+                    cursor.execute("SELECT whitelisted_user FROM VoiceChannelWhitelist WHERE channel_id={} AND client_id={} AND isWhitelisted={} AND isWhitelisted=1".format(str(after.channel.id), str(current_member.id), 1)) # Select whitelisted_user column, if the MEMBER who joined is in the whitelist, then we send a message.
+                    print("A user joined. Showing whitelist for " + str(current_member) + " " + str(current_member.id))
+                    result = cursor.fetchall()
+                    
+                    embed=discord.Embed()
+                    embed.set_author(name=member.name,icon_url=member.avatar_url)
+                    embed.description="{} joined {} in {}".format(member.name, after.channel.name, member.guild.name)
+                    embed.set_footer(text=str(datetime.datetime.now().strftime("%A - %B %d at %I:%M:%S %p")))
+
+                    if len(result) != 0: # If the user's whitelist is not empty
+                        ids = map(lambda n : n[0], result)
+                        if member.id in ids and current_member.voice is None: # Check if the member id is in the whitelist.
+                            print("Sending message...." + member.name + " is in the whitelist.")
+                            await current_member.send(embed=embed)
+                        else:
+                            print(member.name + " is not in the whitelist for " + current_member.name + " or they are in a voice channel.")
+                    else: # If their whitelist is empty, send.
+                        ids = map(lambda n : n[0], result)
+                        if current_member.voice is None:
+                            await current_member.send(embed=embed)
+                    
+        elif before.channel is not None and after.channel is not None:
+            print("User Switched.")
+            cursor = self.database.cursor()
+            cursor.execute("SELECT client_id FROM VoiceChannelSubscriptions WHERE channel_id={} AND isSubscribed={}".format(str(after.channel.id), 1))
+            result = cursor.fetchall()
+            print(result)
+            for id in result: # Loop through each id in the result set. Each ID represents the client subscribed.
+                current_member = discord.utils.find(lambda m: m.id==int(id[0]), member.guild.members) # Check if the  Member exists in Guild.
+                if current_member is not None and current_member.id != member.id: # If member is not none, and also not the  person who joined.
+                    # We need to get the CLIENT's whitelist and check if the member who joined is in the whitelist.
+                    cursor.execute("SELECT whitelisted_user FROM VoiceChannelWhitelist WHERE channel_id={} AND client_id={} AND isWhitelisted={} AND isWhitelisted=1".format(str(after.channel.id), str(current_member.id), 1)) # Select whitelisted_user column, if the MEMBER who joined is in the whitelist, then we send a message.
+                    print("Whitelist for " + str(current_member) + " " + str(current_member.id))
+                    result = cursor.fetchall()
+
+                    embed=discord.Embed()
+                    embed.set_author(name=member.name,icon_url=member.avatar_url)
+                    embed.description="{} joined  {} in {}".format(member.name, after.channel.name, member.guild.name)
+                    embed.set_footer(text=str(datetime.datetime.now().strftime("%A - %B %d at %I:%M:%S %p")))
+                    
+                    if len(result) != 0: # If the user's whitelist is not empty
+                        ids = map(lambda n : n[0], result)
+                        if member.id in ids and current_member.voice is None: # Check if the member id is in the whitelist.
+                            print("Sending message... " + member.name + " is in the whitelist.")
+                            await current_member.send(embed=embed)
+                        else:
+                            print(member.name + " is not in the whitelist for  " + current_member.name + " or they are in a voice channel.")
+                    else: # If their whitelist is empty, send.
+                        if current_member.voice is None:
+                            print("Sending message, user has no whitelist.")
+                            await current_member.send(embed=embed)
+                        else:
+                            print(member.name + " is not in the whitelist for " + current_member.name)
+
+        elif before.channel is not None and after.channel is None:
+            print("user left")
 def setup(bot):
     bot.add_cog(SubscriptionCommands(bot))
