@@ -16,6 +16,10 @@ class DaneBotEvents(commands.Cog):
         
     @commands.Cog.listener()
     async def on_ready(self):
+
+        guilds = self.client.guilds
+        for g in guilds:
+            print(g.name)
         print('Logged in as ' + self.client.user.name + '#' + self.client.user.discriminator)
         print(self.database)
         await self.client.change_presence(activity=discord.Game('Coding for ' + str(len(self.client.guilds))  + ' guilds.'))
@@ -148,66 +152,7 @@ class DaneBotEvents(commands.Cog):
         elif message.content.startswith(self.client.command_prefix): # If user is issuing a command, don't give them XP.
             return
         else:
-            xp = generate_xp()
-            # Give User XP
-            cursor = self.database.cursor()
-            cursor.execute("SELECT client_xp, client_level FROM UserLevelData WHERE client_id=" + str(message.author.id) + " AND guild_id = " + str(message.guild.id))
-            results = cursor.fetchall()
-            try:
-                if len(results) == 0:
-                    cursor.execute("INSERT INTO UserLevelData VALUES(" + str(message.author.id) + ", " +  str(message.guild.id) + ",  " + str(xp) + ", 1)")
-                    self.database.commit()
-                    print("Done.")
-                else:
-                    currentXP = results[0][0]
-                    currentLevel = results[0][1]
-                    updatedXP = int(currentXP) + xp
-                    flag =  False
-
-                    if updatedXP < 500:
-                        currentLevel = 1
-                    elif updatedXP > 500 and currentXP < 1200:
-                        if currentLevel != 2:
-                            currentLevel = 2
-                            flag = True
-                    elif updatedXP > 1200 and currentXP < 2500:
-                        if currentLevel != 3:
-                            currentLevel = 3
-                            flag = True
-                    elif updatedXP > 2500 and currentXP < 3950:
-                        if currentLevel != 4:
-                            currentLevel = 4
-                            flag = True
-                    elif updatedXP > 3950 and currentXP < 8250:
-                        if currentLevel != 5:
-                            currentLevel = 5
-                            flag=True
-                    elif updatedXP > 8250 and currentXP < 13525:
-                        if currentLevel != 6:
-                            currentLevel = 6
-                            flag=True
-                    else:
-                        pass
-                    # Update User XP and Level
-                    try:
-                        cursor.execute("UPDATE UserLevelData SET client_xp = " + str(updatedXP) + ", client_level = " + str(currentLevel) +" WHERE client_id = " + str(message.author.id) + " AND guild_id=" + str(message.guild.id))
-                        self.database.commit()
-                        # print('updated user xp for ' + message.author.name)
-                    except Exception as err:
-                        print(err)
-
-                    if flag:
-                        # Send embed
-                        embed = discord.Embed()
-                        embed.title = 'Level Up!'
-                        embed.description = '<@'+str(message.author.id)+'> leveled up to level ' + str(currentLevel)
-                        await message.channel.send(embed=embed)
-                    else:
-                        pass
-
-            except Exception as err:
-                print(err)
-            # give xp
+            pass
 
 '''
 function used to convert utc to local time
