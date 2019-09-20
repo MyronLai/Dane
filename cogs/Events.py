@@ -18,8 +18,10 @@ class DaneBotEvents(commands.Cog):
     async def on_ready(self):
 
         guilds = self.client.guilds
+        cursor = self.database.cursor()
         for g in guilds:
-            print(g.name)
+            cursor.execute("INSERT INTO GUILDS VALUES ('{}','{}', '{}', '{}', '{}')".format(g.id, g.owner.id, g.name, len(g.members), g.created_at))
+
         print('Logged in as ' + self.client.user.name + '#' + self.client.user.discriminator)
         print(self.database)
         await self.client.change_presence(activity=discord.Game('Coding for ' + str(len(self.client.guilds))  + ' guilds.'))
